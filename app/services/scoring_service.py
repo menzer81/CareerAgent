@@ -135,7 +135,7 @@ def _score_cloud(profile: CandidateProfileData, req: JobRequirements) -> Dimensi
             matched=[],
             missing=[],
         )
-    candidate_cloud = profile.cloud_platforms + profile.technologies
+    candidate_cloud = profile.cloud_platform_names + profile.technologies
     ratio, matched, missing = _fuzzy_overlap(candidate_cloud, req.cloud_requirements)
     score = round(ratio * 100, 1)
     explanation = f"Cloud match: {len(matched)}/{len(req.cloud_requirements)} cloud requirements met."

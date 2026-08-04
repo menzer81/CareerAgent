@@ -3,7 +3,7 @@
 from datetime import date
 from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class WorkHistoryEntry(BaseModel):
@@ -15,8 +15,16 @@ class WorkHistoryEntry(BaseModel):
     description: str = ""
     team_size: int | None = None
     direct_reports: int | None = None
+    manager_reports: int | None = Field(
+        None, description="Number of direct reports who are themselves managers"
+    )
+    largest_org_influence: int | None = Field(
+        None, description="Largest total org size influenced, directly or indirectly"
+    )
+    projects_managed: int | None = None
     budget_usd: int | None = Field(None, description="Approximate budget managed in USD")
     key_accomplishments: list[str] = Field(default_factory=list)
+    leadership_areas: list[str] = Field(default_factory=list)
     technologies: list[str] = Field(default_factory=list)
     industries: list[str] = Field(default_factory=list)
 
@@ -33,7 +41,20 @@ class LeadershipExperience(BaseModel):
     board_presentations: bool = False
     p_and_l_responsibility: bool = False
     hiring_scale: str | None = Field(None, description="e.g. 'Built team from 0 to 40'")
+    interviews_conducted: int | None = None
     leadership_highlights: list[str] = Field(default_factory=list)
+
+
+class AIMaturity(BaseModel):
+    """Self-assessed levels of AI adoption maturity."""
+
+    user: bool = False
+    team_adoption_leader: bool = False
+    department_influencer: bool = False
+    agent_builder: bool = False
+    automation_champion: bool = False
+    executive_advocate: bool = False
+    levels_demonstrated: list[str] = Field(default_factory=list)
 
 
 class AIExperience(BaseModel):
@@ -44,11 +65,17 @@ class AIExperience(BaseModel):
     rag_systems: bool = False
     fine_tuning_experience: bool = False
     ai_agents: bool = False
+    copilot_champion: bool = False
+    organization_ai_adoption: bool = False
+    department_training_owner: bool = False
     tools_and_frameworks: list[str] = Field(
         default_factory=list,
         description="e.g. OpenAI API, LangChain, HuggingFace, PyTorch",
     )
     ai_highlights: list[str] = Field(default_factory=list)
+    ai_maturity: AIMaturity | None = None
+    agent_use_cases: list[str] = Field(default_factory=list)
+    leadership_impact: list[str] = Field(default_factory=list)
 
 
 class ManagementExperience(BaseModel):
@@ -79,6 +106,35 @@ class EducationEntry(BaseModel):
     field_of_study: str | None = None
     graduation_year: int | None = None
     honors: str | None = None
+    minor: str | None = None
+
+
+class CloudPlatformEntry(BaseModel):
+    """A cloud platform the candidate has experience with.
+
+    Accepts either a plain platform name (e.g. ``"AWS"``) or a structured
+    object with experience level and specific areas of experience.
+    """
+
+    platform: str
+    experience_level: str | None = None
+    areas: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_from_string(cls, value: object) -> object:
+        if isinstance(value, str):
+            return {"platform": value}
+        return value
+
+
+class AITransformationExperience(BaseModel):
+    """High-level summary of AI/Copilot transformation leadership."""
+
+    copilot_champion: bool = False
+    agent_development: bool = False
+    organization_training: bool = False
+    highlights: list[str] = Field(default_factory=list)
 
 
 class CandidateProfileData(BaseModel):
@@ -104,9 +160,10 @@ class CandidateProfileData(BaseModel):
         default_factory=list,
         description="All technologies, languages, frameworks, and tools",
     )
-    cloud_platforms: list[str] = Field(
+    cloud_platforms: list[CloudPlatformEntry] = Field(
         default_factory=list,
-        description="e.g. AWS, GCP, Azure, and specific services",
+        description="e.g. AWS, GCP, Azure, and specific services. Accepts plain "
+        "platform names or structured objects with experience level and areas.",
     )
     certifications: list[CertificationEntry] = Field(default_factory=list)
     education: list[EducationEntry] = Field(default_factory=list)
@@ -122,6 +179,20 @@ class CandidateProfileData(BaseModel):
         default_factory=list,
         description="What the candidate is looking for in their next role",
     )
+    technology_categories: dict[str, list[str]] = Field(
+        default_factory=dict,
+        description="Technologies grouped by category, e.g. languages, cloud, devops",
+    )
+    career_highlights: list[str] = Field(
+        default_factory=list,
+        description="Top-level highlight bullets summarizing the candidate's career",
+    )
+    ai_transformation_experience: AITransformationExperience | None = None
+
+    @property
+    def cloud_platform_names(self) -> list[str]:
+        """Flat list of cloud platform names, for matching/scoring purposes."""
+        return [cp.platform for cp in self.cloud_platforms]
 
 
 class CandidateProfileResponse(BaseModel):
@@ -130,7 +201,3 @@ class CandidateProfileResponse(BaseModel):
     profile_data: CandidateProfileData
 
     model_config = {"from_attributes": True}
-
-
-class CandidateProfileUpdate(BaseModel):
-    profile_data: CandidateProfileData

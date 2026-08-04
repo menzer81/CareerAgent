@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_llm_provider
-from app.core.exceptions import AnalysisNotFoundError, LLMNotConfiguredError, NotFoundError
+from app.core.exceptions import AnalysisNotFoundError, NotFoundError
 from app.database import get_db
 from app.repositories.job_analysis_repository import JobAnalysisRepository, ScoringResultRepository
 from app.schemas.analysis import JobAnalysisResponse, JobRequirements
@@ -25,7 +25,7 @@ async def run_analysis(
     """Run full analysis (extraction + scoring) on a job posting.
 
     Requires a candidate profile to be loaded. LLM is used when configured;
-    rule-based scoring is used as fallback.
+    rule-based heuristics/scoring are used as fallback when it is not.
     """
     try:
         analysis_svc = AnalysisService(db, llm)
@@ -35,8 +35,6 @@ async def run_analysis(
         scoring = await scoring_svc.score_job(job_id)
         return ScoringResultResponse.model_validate(scoring)
 
-    except LLMNotConfiguredError as exc:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
     except NotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except AnalysisNotFoundError as exc:
@@ -60,8 +58,6 @@ async def extract_requirements(
             requirements_data=requirements,
             analyzed_at=analysis.analyzed_at,
         )
-    except LLMNotConfiguredError as exc:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
     except NotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 

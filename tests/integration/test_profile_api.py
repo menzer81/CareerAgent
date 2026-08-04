@@ -16,7 +16,7 @@ class TestProfileAPI:
     async def test_create_profile(self, client: AsyncClient):
         response = await client.put(
             "/api/v1/profile",
-            json={"profile_data": SAMPLE_PROFILE_DATA},
+            json=SAMPLE_PROFILE_DATA,
         )
         assert response.status_code == 200
         data = response.json()
@@ -24,22 +24,22 @@ class TestProfileAPI:
 
     @pytest.mark.asyncio
     async def test_get_profile_after_creation(self, client: AsyncClient):
-        await client.put("/api/v1/profile", json={"profile_data": SAMPLE_PROFILE_DATA})
+        await client.put("/api/v1/profile", json=SAMPLE_PROFILE_DATA)
         response = await client.get("/api/v1/profile")
         assert response.status_code == 200
         assert response.json()["full_name"] == "Jane Smith"
 
     @pytest.mark.asyncio
     async def test_update_profile(self, client: AsyncClient):
-        await client.put("/api/v1/profile", json={"profile_data": SAMPLE_PROFILE_DATA})
+        await client.put("/api/v1/profile", json=SAMPLE_PROFILE_DATA)
         updated = {**SAMPLE_PROFILE_DATA, "full_name": "Jane Doe", "current_title": "VP Engineering"}
-        response = await client.put("/api/v1/profile", json={"profile_data": updated})
+        response = await client.put("/api/v1/profile", json=updated)
         assert response.status_code == 200
         assert response.json()["full_name"] == "Jane Doe"
 
     @pytest.mark.asyncio
     async def test_profile_contains_nested_data(self, client: AsyncClient):
-        await client.put("/api/v1/profile", json={"profile_data": SAMPLE_PROFILE_DATA})
+        await client.put("/api/v1/profile", json=SAMPLE_PROFILE_DATA)
         response = await client.get("/api/v1/profile")
         data = response.json()
         profile = data["profile_data"]

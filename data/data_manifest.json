@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0",
+  "canonical_profile": "candidate_profile.json",
+  "files": [
+    {
+      "name": "candidate_profile.json",
+      "type": "candidate_profile",
+      "format": "json",
+      "required": true,
+      "description": "Primary candidate profile for /api/v1/profile endpoints"
+    },
+    {
+      "name": "career_preferences.json",
+      "type": "career_preferences",
+      "format": "json",
+      "required": false,
+      "description": "Role targeting and preference context"
+    },
+    {
+      "name": "stories.json",
+      "type": "stories",
+      "format": "json",
+      "required": false,
+      "description": "Narrative stories and STAR-style examples"
+    },
+    {
+      "name": "accomplishments.json",
+      "type": "accomplishments",
+      "format": "json",
+      "required": false,
+      "description": "Structured accomplishment statements"
+    },
+    {
+      "name": "sample_job_posting.md",
+      "type": "sample_job_posting",
+      "format": "markdown",
+      "required": false,
+      "description": "Sample posting used for ingestion testing"
+    }
+  ]
+}

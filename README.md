@@ -89,14 +89,14 @@ uvicorn app.main:app --reload
 ```bash
 curl -X PUT http://localhost:8000/api/v1/profile \
   -H "Content-Type: application/json" \
-  -d @data/sample_profile.json
+  -d @data/candidate_profile.json
 ```
 
 Or upload via multipart:
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/profile/upload \
-  -F "file=@data/sample_profile.json"
+  -F "file=@data/candidate_profile.json"
 ```
 
 ### Step 2 — Ingest a job posting
@@ -228,7 +228,7 @@ OPENAI_MODEL=gpt-4o
 
 ## Candidate Profile Schema
 
-The profile is a structured JSON document. See [`data/sample_profile.json`](data/sample_profile.json) for a full example.
+The profile is a structured JSON document. See [`data/candidate_profile.json`](data/candidate_profile.json) for a full example.
 
 Top-level fields:
 
@@ -252,6 +252,48 @@ Top-level fields:
   "career_goals": [...]
 }
 ```
+
+---
+
+## Data Files
+
+The `data/` directory includes integration-ready files that can be loaded directly by scripts and external tools.
+
+| File | Purpose |
+|---|---|
+| `data/candidate_profile.json` | Primary candidate profile used by the `/api/v1/profile` endpoints |
+| `data/career_preferences.json` | Preference and targeting signals for role selection workflows |
+| `data/stories.json` | Career achievement and story bank for narrative/report generation |
+| `data/accomplishments.json` | Structured accomplishment bullets for tailoring applications |
+| `data/sample_job_posting.md` | Sample job posting input for `/api/v1/jobs/upload` |
+| `data/data_manifest.json` | Machine-readable index for scripts and external integrations |
+
+If you automate ingestion, treat `data/candidate_profile.json` as the canonical profile source.
+
+---
+
+## Resume Generation Principles
+
+CareerAgent must never invent:
+
+- Employment history
+- Job titles
+- Team sizes
+- Technologies
+- Certifications
+- Education
+- Accomplishments
+- Metrics
+- Dates
+- Business outcomes
+
+All resume content must be traceable to one or more of:
+
+- candidate_profile.json
+- accomplishments.json
+- stories.json
+
+If supporting evidence cannot be found, the information must be omitted rather than generated.
 
 ---
 
@@ -294,7 +336,10 @@ CareerAgent/
 │   ├── unit/                # Unit tests (scoring, gap analysis, ingestion)
 │   └── integration/         # API integration tests
 ├── data/
-│   ├── sample_profile.json  # Sample candidate profile
+│   ├── candidate_profile.json
+│   ├── career_preferences.json
+│   ├── stories.json
+│   ├── accomplishments.json
 │   └── sample_job_posting.md
 ├── Dockerfile
 ├── docker-compose.yml

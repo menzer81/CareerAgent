@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import not_found_exception
 from app.database import get_db
 from app.repositories.candidate_profile_repository import CandidateProfileRepository
-from app.schemas.candidate_profile import CandidateProfileResponse, CandidateProfileUpdate
+from app.schemas.candidate_profile import CandidateProfileData, CandidateProfileResponse
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
@@ -28,14 +28,14 @@ async def get_profile(db: AsyncSession = Depends(get_db)) -> CandidateProfileRes
 
 @router.put("", response_model=CandidateProfileResponse, status_code=status.HTTP_200_OK)
 async def upsert_profile(
-    payload: CandidateProfileUpdate,
+    payload: CandidateProfileData,
     db: AsyncSession = Depends(get_db),
 ) -> CandidateProfileResponse:
     """Create or replace the candidate profile."""
     repo = CandidateProfileRepository(db)
     profile = await repo.upsert_profile(
-        full_name=payload.profile_data.full_name,
-        profile_data=payload.profile_data.model_dump(),
+        full_name=payload.full_name,
+        profile_data=payload.model_dump(),
     )
     return CandidateProfileResponse.model_validate(profile)
 
@@ -55,10 +55,10 @@ async def upload_profile(
             detail=f"Invalid JSON file: {exc}",
         ) from exc
 
-    payload = CandidateProfileUpdate.model_validate({"profile_data": data})
+    payload = CandidateProfileData.model_validate(data)
     repo = CandidateProfileRepository(db)
     profile = await repo.upsert_profile(
-        full_name=payload.profile_data.full_name,
-        profile_data=payload.profile_data.model_dump(),
+        full_name=payload.full_name,
+        profile_data=payload.model_dump(),
     )
     return CandidateProfileResponse.model_validate(profile)

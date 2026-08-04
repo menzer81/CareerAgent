@@ -1,15 +1,17 @@
-"""Job analysis service — uses LLM to extract structured requirements."""
+"""Job analysis service — uses LLM to extract structured requirements,
+falling back to rule-based heuristics when no LLM is configured."""
 
 import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import LLMNotConfiguredError, NotFoundError
+from app.core.exceptions import NotFoundError
 from app.models.analysis import JobAnalysis
 from app.repositories.job_analysis_repository import JobAnalysisRepository
 from app.repositories.job_posting_repository import JobPostingRepository
 from app.schemas.analysis import JobRequirements
 from app.services.llm.base import BaseLLMProvider
+from app.services.requirement_extraction_service import heuristic_extract_requirements
 
 logger = logging.getLogger(__name__)
 
@@ -21,16 +23,24 @@ class AnalysisService:
         self.llm = llm
 
     async def analyze_job(self, job_posting_id: int) -> JobAnalysis:
-        """Extract structured requirements from a job posting via LLM and persist."""
-        if self.llm is None:
-            raise LLMNotConfiguredError()
+        """Extract structured requirements from a job posting and persist.
 
+        Uses the LLM when configured; falls back to heuristic/rule-based
+        extraction otherwise so the pipeline works without an API key.
+        """
         posting = await self.job_repo.get(job_posting_id)
         if posting is None:
             raise NotFoundError("JobPosting", job_posting_id)
 
-        logger.info("Extracting requirements for job_posting_id=%d", job_posting_id)
-        requirements: JobRequirements = await self.llm.extract_job_requirements(posting.raw_text)
+        if self.llm is not None:
+            logger.info("Extracting requirements via LLM for job_posting_id=%d", job_posting_id)
+            requirements: JobRequirements = await self.llm.extract_job_requirements(posting.raw_text)
+        else:
+            logger.info(
+                "Extracting requirements via rule-based heuristics for job_posting_id=%d",
+                job_posting_id,
+            )
+            requirements = heuristic_extract_requirements(posting.raw_text)
 
         # Back-fill title/company on the posting if the LLM found them
         if not posting.title and requirements.inferred_title:
