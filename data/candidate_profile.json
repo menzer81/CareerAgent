@@ -1,0 +1,506 @@
+{
+  "full_name": "Brad Breivik",
+  "current_title": "Engineering Leader",
+  "location": "Tampa, FL",
+  "years_total_experience": 15.0,
+  "years_management_experience": 7.0,
+  "summary": "Engineering leader with 15 years of software delivery experience and 5+ years leading distributed teams. Proven track record of organizational transformation, AI adoption, compliance modernization, cloud enablement, and delivery of mission-critical enterprise platforms. Successfully led engineering organizations through large-scale technical change including AI-assisted development, cloud migration readiness, security compliance automation, and team turnaround initiatives.",
+  "work_history": [
+    {
+      "company": "J.J. Keller & Associates",
+      "title": "Software Development Manager",
+      "start_date": "2023",
+      "end_date": null,
+      "is_current": true,
+      "description": "Led engineering teams responsible for managed services software products and operational excellence initiatives. Oversaw software delivery, compliance programs, vendor management, AI adoption, and engineering process improvements.",
+      "team_size": 10,
+      "direct_reports": 4,
+      "manager_reports": 1,
+      "largest_org_influence": 10,
+      "key_accomplishments": [
+        "Transformed a dysfunctional engineering team that had operated without stable leadership for approximately six months.",
+        "Improved team culture, stakeholder relationships, meeting effectiveness, and delivery processes within approximately 60 days.",
+        "Created and delivered GitHub Copilot training programs for engineering, QA, and product teams.",
+        "Developed AI adoption materials that were later used by managers across the department.",
+        "Maintained delivery output during major staffing reductions through AI-assisted development practices.",
+        "Increased individual developer productivity by approximately 30 percent through effective AI adoption.",
+        "Led agent-based automation of compliance evidence collection processes.",
+        "Automated approximately 80 percent of SOC 2 evidence collection workflows.",
+        "Automated approximately 50 percent of ISO 27001 evidence collection workflows.",
+        "Partnered with DevOps teams to improve monitoring, telemetry, and alerting through SRE agent initiatives.",
+        "Reduced monthly operating expenses from approximately $37,000 to $1,300."
+      ],
+      "leadership_areas": [
+        "Engineering Management",
+        "Compliance",
+        "AI Adoption",
+        "Budget Planning",
+        "Vendor Management",
+        "Team Development"
+      ],
+      "technologies": [
+        ".NET",
+        "Azure",
+        "Azure DevOps",
+        "GitHub Copilot",
+        "Playwright",
+        "MCP Servers",
+        "OpenAI",
+        "Agentic AI"
+      ],
+      "industries": [
+        "Managed Services",
+        "Compliance",
+        "Enterprise Software"
+      ]
+    },
+    {
+      "company": "SitusAMC",
+      "title": "Software Development Manager",
+      "start_date": "2021",
+      "end_date": "2023",
+      "is_current": false,
+      "description": "Managed engineering staff and coordinated development activities across domestic and offshore teams. Responsible for delivery oversight, modernization efforts, and technical leadership.",
+      "team_size": 15,
+      "direct_reports": 3,
+      "largest_org_influence": 15,
+      "key_accomplishments": [
+        "Managed direct reports while overseeing delivery performed by offshore engineering teams.",
+        "Provided delivery oversight for approximately 12 offshore developers through a matrix management structure.",
+        "Led modernization of legacy web applications built on ASP.NET Web Forms.",
+        "Implemented modern web controls and Bootstrap-based user interfaces.",
+        "Supported technical planning and coordination across multiple development teams."
+      ],
+      "leadership_areas": [
+        "Distributed Teams",
+        "Application Modernization",
+        "Delivery Management",
+        "Technical Leadership"
+      ],
+      "technologies": [
+        "ASP.NET",
+        "Web Forms",
+        "Bootstrap",
+        "C#",
+        "SQL Server"
+      ],
+      "industries": [
+        "Mortgage Technology",
+        "Financial Services"
+      ]
+    },
+    {
+      "company": "Entrata",
+      "title": "Software Development Manager",
+      "start_date": "2018",
+      "end_date": "2021",
+      "is_current": false,
+      "description": "Managed multiple engineering teams responsible for critical accounting systems supporting property management customers. Led large-scale technical enablement and cloud transformation preparation initiatives.",
+      "team_size": 10,
+      "direct_reports": 10,
+      "largest_org_influence": 500,
+      "key_accomplishments": [
+        "Managed two engineering teams consisting of approximately 10 developers.",
+        "Led development efforts for core accounting systems supporting property management operations.",
+        "Reduced accounting product defect backlog by approximately 70 percent.",
+        "Led delivery of a new invoicing platform.",
+        "Created and operated a company-wide engineering lunch-and-learn program.",
+        "Organized AWS and containerization readiness training for over 500 engineers in the United States and India.",
+        "Achieved approximately 98 percent participation in cloud enablement training initiatives.",
+        "Developed engineering metrics, reporting, and organizational visibility processes."
+      ],
+      "leadership_areas": [
+        "People Leadership",
+        "Engineering Enablement",
+        "Cloud Transformation",
+        "Developer Training",
+        "Agile Delivery"
+      ],
+      "technologies": [
+        ".NET",
+        "AWS",
+        "Docker",
+        "Containers",
+        "SQL Server",
+        "Azure DevOps"
+      ],
+      "industries": [
+        "Property Management",
+        "SaaS",
+        "Financial Systems"
+      ]
+    },
+    {
+      "company": "Exevision",
+      "title": "Vice President of Development Management",
+      "start_date": "2013",
+      "end_date": "2018",
+      "is_current": false,
+      "description": "Led software development efforts for transportation and construction quality management platforms serving state departments of transportation and engineering organizations.",
+      "team_size": 3,
+      "direct_reports": 3,
+      "projects_managed": 2,
+      "key_accomplishments": [
+        "Rescued and rebuilt a failed sample management platform initiative.",
+        "Designed and implemented a scalable system capable of managing tens of thousands of material samples.",
+        "Created a formula-driven testing platform that allowed users to migrate Excel formulas directly into the application.",
+        "Delivered a highly configurable Materials and Sample Management System used by transportation agencies.",
+        "Successfully implemented and migrated legacy data for the Illinois Department of Transportation.",
+        "Managed software development activities across multiple customer projects.",
+        "Led architecture, product design, development, and implementation activities."
+      ],
+      "leadership_areas": [
+        "Product Development",
+        "Architecture",
+        "Customer Delivery",
+        "Project Leadership"
+      ],
+      "technologies": [
+        "C#",
+        ".NET",
+        "SQL Server",
+        "JavaScript",
+        "Excel Integration"
+      ],
+      "industries": [
+        "Transportation",
+        "Government",
+        "Construction",
+        "Engineering"
+      ]
+    },
+    {
+      "company": "Various Employers",
+      "title": "Software Developer / Senior Software Developer / Lead Developer",
+      "start_date": "2011",
+      "end_date": "2013",
+      "is_current": false,
+      "description": "Worked primarily within the Microsoft technology stack delivering enterprise software applications and web-based systems.",
+      "key_accomplishments": [
+        "Designed and developed enterprise software solutions.",
+        "Built web applications and business systems using Microsoft technologies.",
+        "Collaborated with business stakeholders to deliver software solutions."
+      ],
+      "technologies": [
+        "C#",
+        ".NET",
+        "ASP.NET",
+        "SQL Server",
+        "JavaScript"
+      ]
+    }
+  ],
+  "leadership_experience": {
+    "largest_team_managed": 8,
+    "largest_org_managed": 12,
+    "manager_of_managers": true,
+    "director_level_or_above": false,
+    "executive_level": false,
+    "vp_or_above": false,
+    "managed_multiple_teams": true,
+    "cross_functional_leadership": true,
+    "board_presentations": true,
+    "p_and_l_responsibility": false,
+    "hiring_scale": "Grew engineering org from 6 to 12 in 6 months",
+    "interviews_conducted": 80,
+    "leadership_highlights": [
+      "Transformed an engineering team that had operated without stable leadership for approximately six months by rebuilding team culture, stakeholder trust, meeting effectiveness, and delivery discipline.",
+      "Led engineering organizations spanning onshore and offshore teams with responsibility for software delivery, people development, hiring, vendor management, and operational excellence.",
+      "Managed software development managers and distributed engineering teams, providing leadership across multiple products and geographic locations.",
+      "Designed and delivered department-wide GitHub Copilot and AI adoption training programs that were later reused by managers throughout the organization.",
+      "Maintained delivery capacity during significant headcount reductions through AI-assisted software development practices and engineering process improvements.",
+      "Led organizational AI adoption efforts spanning engineering, QA, product management, compliance, and operations teams.",
+      "Created and launched company-wide engineering learning programs that promoted knowledge sharing, technical growth, and cross-team collaboration.",
+      "Organized cloud transformation readiness initiatives including AWS and containerization training for more than 500 engineers across the United States and India.",
+      "Built and onboarded new engineering teams, successfully hiring engineers and architects while establishing onboarding, mentoring, and development processes.",
+      "Directed engineering compliance initiatives including SOC 2 and ISO 27001 audit readiness, evidence collection, risk remediation, and process governance.",
+      "Created engineering metrics, reporting frameworks, and organizational visibility processes used to support leadership decision making.",
+      "Led modernization initiatives that transformed legacy business systems into maintainable, modern web applications and services.",
+      "Partnered with executive leadership, product management, architecture, security, and operations teams to align engineering investments with business objectives.",
+      "Championed developer productivity initiatives through training, automation, AI-assisted workflows, and continuous improvement programs.",
+      "Led customer-facing software delivery efforts for government agencies, enterprise organizations, and SaaS customers while balancing technical, operational, and business priorities."
+    ]
+  },
+  "ai_experience": {
+    "worked_with_llms": true,
+    "built_ai_products": true,
+    "ml_engineering_background": false,
+    "ai_product_management": true,
+    "rag_systems": false,
+    "fine_tuning_experience": false,
+    "ai_agents": true,
+    "copilot_champion": true,
+    "organization_ai_adoption": true,
+    "department_training_owner": true,
+
+    "tools_and_frameworks": [
+      "GitHub Copilot",
+      "GitHub Copilot Coding Agent",
+      "GitHub Copilot CLI",
+      "Azure OpenAI",
+      "MCP Servers",
+      "Playwright",
+      "Azure DevOps",
+      "LLM-powered Agents"
+    ],
+
+    "ai_highlights": [
+      "Led GitHub Copilot adoption across engineering teams, product teams, and QA organizations.",
+      "Created AI training materials and enablement content later adopted throughout the department.",
+      "Trained software engineers on day-to-day usage of AI-assisted development workflows.",
+      "Maintained engineering throughput despite significant headcount reductions through AI-assisted development practices.",
+      "Increased individual developer productivity by approximately 30 percent through effective AI adoption.",
+      "Led implementation of coding-agent workflows integrated with Azure DevOps work items.",
+      "Promoted use of GitHub Copilot Coding Agent for autonomous task execution.",
+      "Implemented agent-assisted research workflows using Copilot CLI.",
+      "Created agent-driven compliance evidence collection processes supporting SOC 2 and ISO 27001 programs.",
+      "Automated approximately 80 percent of SOC 2 evidence collection activities.",
+      "Automated approximately 50 percent of ISO 27001 evidence collection activities.",
+      "Developed AI-assisted evidence validation and gap-analysis workflows for compliance audits.",
+      "Partnered with DevOps teams to develop and refine AI-assisted SRE workflows.",
+      "Leveraged AI for project planning, effort estimation, requirements analysis, and technical research.",
+      "Established recurring team sessions to demonstrate successful AI use cases and accelerate organizational adoption."
+    ],
+    "ai_maturity": {
+      "user": true,
+      "team_adoption_leader": true,
+      "department_influencer": true,
+      "agent_builder": true,
+      "automation_champion": true,
+      "executive_advocate": false,
+
+      "levels_demonstrated": [
+        "Personal Productivity",
+        "Team Productivity",
+        "Department Enablement",
+        "Process Automation",
+        "Compliance Automation",
+        "Operational Automation"
+      ]
+    },
+    "agent_use_cases": [
+      "Compliance Evidence Collection",
+      "Evidence Quality Analysis",
+      "SRE Automation",
+      "Code Generation",
+      "Task Automation",
+      "Technical Research",
+      "Project Planning",
+      "Effort Estimation",
+      "Azure Cost Analysis",
+      "Developer Productivity"
+    ],
+
+    "leadership_impact": [
+      "Created and delivered department-wide AI enablement training.",
+      "Promoted practical AI adoption across engineering delivery workflows.",
+      "Helped teams identify repeatable tasks suitable for agent-based automation.",
+      "Developed AI adoption practices that were replicated by multiple teams.",
+      "Established a culture of experimentation and knowledge sharing around AI tools."
+    ]
+  },
+  "management_experience": {
+    "total_years_managing": 7.0,
+    "total_years_ic": 8.0,
+    "remote_team_management": true,
+    "distributed_team_management": true,
+    "offshore_team_management": true,
+    "agile_practitioner": true,
+    "scaled_agile": false,
+    "org_design_experience": true,
+    "performance_management": true,
+    "executive_stakeholder_management": true,
+    "management_highlights": [
+      "Engineering team turnaround at J.J. Keller",
+      "AWS/containerization readiness program for 500+ engineers",
+      "Department-wide AI adoption and Copilot enablement",
+      "Compliance leadership for SOC 2 and ISO 27001",
+      "Building and onboarding new engineering teams"
+    ]
+  },
+  "technology_categories": {
+    "languages": [
+      "C#",
+      "JavaScript",
+      "TypeScript",
+      "SQL"
+    ],
+
+    "frameworks": [
+      ".NET",
+      "ASP.NET",
+      "Entity Framework",
+      "Bootstrap",
+      "jQuery"
+    ],
+
+    "databases": [
+      "SQL Server",
+      "PostgreSQL",
+      "MySQL",
+      "Oracle"
+    ],
+
+    "cloud": [
+      "Azure",
+      "AWS"
+    ],
+
+    "devops": [
+      "Azure DevOps",
+      "Git",
+      "CI/CD",
+      "Docker"
+    ],
+
+    "ai": [
+      "GitHub Copilot",
+      "GitHub Copilot Coding Agent",
+      "Azure OpenAI",
+      "AI Agents",
+      "MCP Servers",
+      "Playwright"
+    ],
+
+    "leadership": [
+      "Engineering Management",
+      "Vendor Management",
+      "Budget Planning",
+      "Hiring",
+      "Performance Management",
+      "Distributed Teams",
+      "Technical Training",
+      "Compliance Management"
+    ]
+  },
+  "technologies": [
+    "C#",
+    ".NET Framework",
+    ".NET Core",
+    "ASP.NET",
+    "ASP.NET MVC",
+    "ASP.NET Web Forms",
+    "Web API",
+    "Entity Framework",
+    "JavaScript",
+    "TypeScript",
+    "jQuery",
+    "Bootstrap",
+    "HTML",
+    "CSS",
+    "SQL",
+    "SQL Server",
+    "PostgreSQL",
+    "MySQL",
+    "Oracle",
+    "Azure",
+    "AWS",
+    "Azure DevOps",
+    "Git",
+    "GitHub",
+    "CI/CD",
+    "Docker",
+    "Containerization",
+    "REST APIs",
+    "Microservices",
+    "Agile",
+    "Scrum",
+    "Kanban",
+    "GitHub Copilot",
+    "GitHub Copilot Coding Agent",
+    "Azure OpenAI",
+    "LLMs",
+    "AI Agents",
+    "MCP Servers",
+    "Playwright",
+    "SRE Automation",
+    "SOC 2",
+    "ISO 27001",
+    "Application Modernization",
+    "System Architecture",
+    "Software Design",
+    "Technical Leadership",
+    "Engineering Management"
+  ],
+  "cloud_platforms": [
+    {
+      "platform": "Microsoft Azure",
+      "experience_level": "Advanced",
+      "areas": [
+        "Azure DevOps",
+        "Application Hosting",
+        "Cloud Architecture",
+        "CI/CD Pipelines",
+        "Cloud Cost Analysis",
+        "Monitoring",
+        "Security",
+        "Identity Management"
+      ]
+    },
+    {
+      "platform": "Amazon Web Services",
+      "experience_level": "Intermediate",
+      "areas": [
+        "AWS Training Leadership",
+        "Cloud Adoption",
+        "Migration Planning",
+        "Containerization",
+        "Engineering Enablement"
+      ]
+    }
+  ],
+  "certifications": [
+    {
+      "name": "AWS Solutions Architect — Professional",
+      "issuer": "Amazon Web Services",
+      "year": 2022,
+      "is_active": true
+    },
+    {
+      "name": "Certified Kubernetes Administrator (CKA)",
+      "issuer": "CNCF",
+      "year": 2021,
+      "is_active": true
+    }
+  ],
+  "education": [
+    {
+      "institution": "University of Utah",
+      "degree": "B.S.",
+      "field_of_study": "Economics",
+      "minor": "Spanish",
+      "graduation_year": 2011
+    },
+    {
+      "institution": "University of Utah",
+      "degree": "M.S.",
+      "field_of_study": "Information Systems",
+      "graduation_year": 2013
+    }
+  ],
+  "career_highlights": [
+    "Led department-wide AI adoption initiatives",
+    "Trained 500+ engineers for AWS transformation",
+    "Automated SOC 2 and ISO 27001 evidence collection",
+    "Built and scaled engineering teams",
+    "Delivered large-scale SaaS platforms"
+  ],
+  "ai_transformation_experience": {
+    "copilot_champion": true,
+    "agent_development": true,
+    "organization_training": true,
+
+    "highlights": [
+      "Created Copilot training materials adopted department-wide",
+      "Led AI adoption across engineering, QA, and product teams",
+      "Maintained output despite major headcount reductions",
+      "Automated SOC2 evidence collection",
+      "Automated ISO27001 evidence collection",
+      "Implemented agent-assisted SRE workflows",
+      "Used coding agents integrated with Azure DevOps"
+    ]
+  },
+  "industries": [
+    "SaaS", "B2B Software", "Fintech", "Payments", "Property Management", "Government Technology", "Transportation", "Construction Technology", "Engineering", "Compliance", "Infrastructure Management", "Project management", "Enterprise Software"
+  ]
+}

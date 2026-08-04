@@ -1,0 +1,252 @@
+[
+  {
+    "id": "STORY-001",
+    "title": "Turnaround of a Dysfunctional Engineering Team",
+    "company": "J.J. Keller",
+    "type": [
+      "leadership",
+      "team-transformation",
+      "conflict-resolution",
+      "change-management"
+    ],
+    "situation": "Inherited an engineering team that had been without a manager for approximately six months. Relationships between development and business leadership had deteriorated, meetings were ineffective, and the team exhibited a strong us-versus-them mentality.",
+    "task": "Restore team culture, improve stakeholder relationships, increase productivity, and establish effective engineering practices.",
+    "actions": [
+      "Built trust through one-on-one conversations with team members and stakeholders.",
+      "Introduced structure and accountability into meetings and Scrum ceremonies.",
+      "Addressed behavioral and performance concerns.",
+      "Improved communication between engineering and business leadership.",
+      "Created a more collaborative and positive team environment."
+    ],
+    "results": [
+      "Improved team morale and engagement.",
+      "Significantly improved stakeholder relationships.",
+      "Created productive and focused team meetings.",
+      "Increased overall team effectiveness and delivery performance."
+    ],
+    "skills_demonstrated": [
+      "Leadership",
+      "Coaching",
+      "Team Building",
+      "Change Management",
+      "Conflict Resolution"
+    ]
+  },
+
+  {
+    "id": "STORY-002",
+    "title": "Department-Wide GitHub Copilot Adoption",
+    "company": "J.J. Keller",
+    "type": [
+      "ai-transformation",
+      "organizational-leadership",
+      "developer-productivity"
+    ],
+    "situation": "AI-assisted development tools were available but adoption and effective usage varied greatly among team members.",
+    "task": "Accelerate AI adoption and ensure teams were using GitHub Copilot effectively to improve productivity.",
+    "actions": [
+      "Created training materials and best-practice guides.",
+      "Conducted training sessions for engineering, QA, and product teams.",
+      "Established recurring demonstrations of successful AI use cases.",
+      "Encouraged experimentation with coding agents and AI workflows.",
+      "Shared lessons learned across teams."
+    ],
+    "results": [
+      "Rapid adoption of GitHub Copilot across teams.",
+      "Training materials were reused by other managers across the department.",
+      "Developer productivity increased approximately 30 percent.",
+      "Teams became significantly more comfortable leveraging AI tools."
+    ],
+    "skills_demonstrated": [
+      "Technical Leadership",
+      "Organizational Change",
+      "Training",
+      "AI Adoption",
+      "Developer Productivity"
+    ]
+  },
+
+  {
+    "id": "STORY-003",
+    "title": "Maintaining Delivery Through Major Downsizing",
+    "company": "J.J. Keller",
+    "type": [
+      "leadership",
+      "ai-transformation",
+      "productivity"
+    ],
+    "situation": "The engineering organization experienced significant headcount reductions while delivery expectations remained largely unchanged.",
+    "task": "Maintain delivery capacity and team effectiveness despite reduced staffing levels.",
+    "actions": [
+      "Increased adoption of GitHub Copilot and AI-assisted workflows.",
+      "Leveraged coding agents for implementation tasks.",
+      "Encouraged automation of repetitive work.",
+      "Focused engineers on higher-value activities.",
+      "Improved planning and estimation with AI assistance."
+    ],
+    "results": [
+      "Maintained overall delivery output.",
+      "Improved individual productivity by approximately 30 percent.",
+      "Successfully adapted engineering processes to reduced staffing levels."
+    ],
+    "skills_demonstrated": [
+      "Leadership",
+      "AI Transformation",
+      "Operational Excellence",
+      "Strategic Thinking"
+    ]
+  },
+
+  {
+    "id": "STORY-004",
+    "title": "Automating SOC 2 and ISO 27001 Evidence Collection",
+    "company": "J.J. Keller",
+    "type": [
+      "innovation",
+      "compliance",
+      "automation",
+      "ai-agents"
+    ],
+    "situation": "SOC 2 and ISO 27001 audits required significant manual effort to collect and validate evidence across many systems.",
+    "task": "Reduce audit preparation effort and improve evidence quality through automation.",
+    "actions": [
+      "Developed agent-based evidence collection processes.",
+      "Leveraged MCP servers and Playwright automation.",
+      "Built automated evidence validation and gap analysis workflows.",
+      "Integrated AI-powered evaluation of collected evidence."
+    ],
+    "results": [
+      "Automated approximately 80 percent of SOC 2 evidence collection.",
+      "Automated approximately 50 percent of ISO 27001 evidence collection.",
+      "Improved audit readiness and reduced manual effort.",
+      "Increased confidence in evidence quality and completeness."
+    ],
+    "skills_demonstrated": [
+      "Innovation",
+      "Compliance",
+      "AI Agents",
+      "Automation",
+      "Technical Leadership"
+    ]
+  },
+
+  {
+    "id": "STORY-005",
+    "title": "Preparing 500 Engineers for AWS and Containerization",
+    "company": "Entrata",
+    "type": [
+      "organizational-leadership",
+      "cloud-transformation",
+      "training"
+    ],
+    "situation": "Entrata was preparing for a major shift toward AWS and containerization technologies that were unfamiliar to many engineering teams.",
+    "task": "Help approximately 500 developers successfully prepare for the transition.",
+    "actions": [
+      "Organized company-wide training initiatives.",
+      "Coordinated learning paths and educational resources.",
+      "Worked across US and India engineering organizations.",
+      "Tracked completion and participation metrics."
+    ],
+    "results": [
+      "More than 500 engineers participated.",
+      "Achieved approximately 98 percent completion.",
+      "Improved organizational readiness for cloud transformation."
+    ],
+    "skills_demonstrated": [
+      "Leadership",
+      "Cloud Transformation",
+      "Technical Training",
+      "Program Management"
+    ]
+  },
+
+  {
+    "id": "STORY-006",
+    "title": "Creating a Company-Wide Engineering Learning Program",
+    "company": "Entrata",
+    "type": [
+      "developer-growth",
+      "leadership",
+      "culture"
+    ],
+    "situation": "Engineering teams lacked a regular mechanism for sharing knowledge and learning from one another.",
+    "task": "Create a sustainable process for cross-team learning and technical collaboration.",
+    "actions": [
+      "Launched a weekly lunch-and-learn series.",
+      "Recruited engineers and architects as presenters.",
+      "Showcased new technologies and project demonstrations.",
+      "Facilitated knowledge sharing across teams."
+    ],
+    "results": [
+      "Created a sustained culture of technical learning.",
+      "Improved visibility into projects across the organization.",
+      "Encouraged collaboration and innovation."
+    ],
+    "skills_demonstrated": [
+      "Leadership",
+      "Developer Growth",
+      "Program Creation",
+      "Organizational Culture"
+    ]
+  },
+
+  {
+    "id": "STORY-007",
+    "title": "Rescuing a Failed Product Initiative",
+    "company": "Exevision",
+    "type": [
+      "architecture",
+      "product-development",
+      "technical-leadership"
+    ],
+    "situation": "A previous attempt at building a sample management and testing system had been unsuccessful.",
+    "task": "Deliver a scalable replacement capable of handling complex testing workflows and large numbers of samples.",
+    "actions": [
+      "Redesigned the system architecture.",
+      "Created a highly scalable sample management platform.",
+      "Implemented Excel-style formula support for laboratory testing workflows.",
+      "Focused heavily on usability and configurability."
+    ],
+    "results": [
+      "Successfully managed tens of thousands of samples.",
+      "Simplified sample management workflows for users.",
+      "Received strong customer acceptance."
+    ],
+    "skills_demonstrated": [
+      "Architecture",
+      "Technical Leadership",
+      "Product Design",
+      "Customer Focus"
+    ]
+  },
+
+  {
+    "id": "STORY-008",
+    "title": "Illinois Department of Transportation Migration",
+    "company": "Exevision",
+    "type": [
+      "customer-success",
+      "migration",
+      "project-leadership"
+    ],
+    "situation": "The Illinois Department of Transportation needed to migrate from a legacy system to a new materials and testing platform.",
+    "task": "Implement the platform and migrate legacy operational data without disrupting business operations.",
+    "actions": [
+      "Worked closely with customer stakeholders.",
+      "Planned and executed data migration activities.",
+      "Configured the platform to meet customer requirements.",
+      "Supported deployment and adoption efforts."
+    ],
+    "results": [
+      "Successfully migrated legacy data.",
+      "Delivered the new platform successfully.",
+      "Improved operational capabilities for the customer."
+    ],
+    "skills_demonstrated": [
+      "Customer Management",
+      "Project Leadership",
+      "Implementation",
+      "Requirements Analysis"
+    ]
+  }
+]

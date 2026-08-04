@@ -1,0 +1,150 @@
+{
+  "target_roles": {
+    "must_have": [
+      "Senior Software Development Manager",
+      "Group Engineering Manager"
+    ],
+    "interested": [
+      "Director of Engineering",
+      "VP of Engineering",
+      "Principal Engineering Manager"
+    ],
+    "would_consider": [
+      "Engineering Operations Manager",
+      "Technical Program Manager",
+      "Software Development Manager"
+    ],
+    "not_interested": [
+      "Platform Engineering Manager"
+    ]
+  },
+
+  "career_direction": {
+    "long_term_goal": "Director of Engineering",
+    "manager_of_managers_importance": "Important",
+    "accept_sdm_role_for_growth": true,
+    "ai_focused_engineering_leader": true
+  },
+
+  "company_preferences": {
+    "preferred_sizes": [
+      "Startup",
+      "Small",
+      "Mid-size"
+    ],
+
+    "preferred_company_types": [
+      "Fast-growing Startup",
+      "Private Equity Owned",
+      "Product Company",
+      "SaaS Company",
+      "Government Contractor"
+    ],
+
+    "avoid_company_types": []
+  },
+
+  "work_arrangement": {
+    "preference_order": [
+      "Onsite",
+      "Hybrid",
+      "Remote"
+    ],
+
+    "travel_tolerance": "Up to 25%"
+  },
+
+  "industry_preferences": {
+    "ratings": {
+      "SaaS": 5,
+      "GovTech": 5,
+      "Healthcare": 5,
+      "Education": 5,
+      "AI/ML": 4,
+      "FinTech": 4,
+      "Construction Technology": 4,
+      "PropTech": 4,
+      "Security": 4,
+      "Developer Tools": 2
+    },
+
+    "avoid_industries": [
+      "Online Gambling",
+      "Adult Entertainment",
+      "Cannabis"
+    ]
+  },
+
+  "technology_preferences": {
+    "microsoft_ecosystem": "Preferred",
+
+    "open_to_other_stacks": true,
+
+    "acceptable_platforms": [
+      "Azure",
+      "AWS",
+      "GCP"
+    ],
+
+    "acceptable_languages": [
+      "C#",
+      "Python",
+      "Java",
+      "JavaScript",
+      "TypeScript"
+    ]
+  },
+
+  "compensation": {
+    "remote": {
+      "minimum": 180000,
+      "ideal": 200000,
+      "stretch": 220000
+    },
+
+    "onsite": {
+      "minimum": 200000,
+      "ideal": 220000,
+      "stretch": 240000
+    },
+
+    "equity_heavy_compensation": false
+  },
+
+  "motivators": [
+    "Strategy",
+    "Coaching",
+    "AI Adoption",
+    "Compliance",
+    "Mentoring Managers"
+  ],
+
+  "energy_drains": [
+    "Budgeting",
+    "Vendor Negotiations",
+    "Endless Meetings",
+    "HR Paperwork",
+    "Office Politics"
+  ],
+
+  "job_scoring_weights": {
+    "leadership_growth": 10,
+    "manager_of_managers_opportunity": 10,
+    "ai_leadership_opportunity": 10,
+    "compensation": 9,
+    "company_type": 8,
+    "industry_fit": 8,
+    "technology_fit": 7,
+    "location_fit": 7,
+    "travel_requirements": 4
+  },
+  "strategic_themes": [
+    "AI Transformation",
+    "Engineering Enablement",
+    "Organizational Change",
+    "Technical Training",
+    "Developer Productivity",
+    "Compliance Automation",
+    "Scaling Engineering Teams"
+]
+}

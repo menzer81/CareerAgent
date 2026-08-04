@@ -1,0 +1,170 @@
+[
+  {
+    "id": "JJK-001",
+    "title": "Turned Around Underperforming Engineering Team",
+    "company": "J.J. Keller",
+    "category": "Leadership",
+    "tags": [
+      "culture",
+      "agile",
+      "people-management",
+      "stakeholder-management"
+    ],
+    "impact": "Inherited a team without stable management for approximately six months and rebuilt team culture, trust, productivity, and stakeholder relationships within sixty days.",
+    "scope": {
+      "direct_reports": 4,
+      "managers": 1,
+      "developers": 10
+    }
+  },
+
+  {
+    "id": "JJK-002",
+    "title": "Led Department AI Adoption",
+    "company": "J.J. Keller",
+    "category": "AI Transformation",
+    "tags": [
+      "copilot",
+      "developer-productivity",
+      "training",
+      "innovation"
+    ],
+    "impact": "Created GitHub Copilot training materials and led adoption efforts across engineering, QA, and product teams. Materials were adopted by other managers throughout the department."
+  },
+
+  {
+    "id": "JJK-003",
+    "title": "Maintained Delivery Through Downsizing",
+    "company": "J.J. Keller",
+    "category": "AI Transformation",
+    "tags": [
+      "copilot",
+      "productivity",
+      "engineering-management"
+    ],
+    "impact": "Maintained team output despite significant headcount reductions through AI-assisted development practices.",
+    "metrics": {
+      "productivity_increase_percent": 30
+    }
+  },
+
+  {
+    "id": "JJK-004",
+    "title": "Compliance Evidence Automation",
+    "company": "J.J. Keller",
+    "category": "Compliance",
+    "tags": [
+      "soc2",
+      "iso27001",
+      "automation",
+      "agents"
+    ],
+    "impact": "Led creation of AI-driven evidence collection and validation solutions.",
+    "metrics": {
+      "soc2_automation_percent": 80,
+      "iso27001_automation_percent": 50
+    }
+  },
+
+  {
+    "id": "JJK-005",
+    "title": "Reduced Monthly Product Costs",
+    "company": "J.J. Keller",
+    "category": "Cost Optimization",
+    "tags": [
+      "budget",
+      "optimization",
+      "leadership"
+    ],
+    "impact": "Reduced monthly miscellaneous operating expenses from $37,000 to $1,300.",
+    "metrics": {
+      "before_cost": 37000,
+      "after_cost": 1300
+    }
+  },
+
+  {
+    "id": "ENT-001",
+    "title": "AWS Enablement for 500 Engineers",
+    "company": "Entrata",
+    "category": "Organizational Leadership",
+    "tags": [
+      "aws",
+      "training",
+      "cloud",
+      "transformation"
+    ],
+    "impact": "Organized and executed AWS and containerization training for over 500 engineers in the United States and India.",
+    "metrics": {
+      "engineers_trained": 500,
+      "completion_rate_percent": 98
+    }
+  },
+
+  {
+    "id": "ENT-002",
+    "title": "Organization-Wide Technical Learning Program",
+    "company": "Entrata",
+    "category": "Leadership",
+    "tags": [
+      "training",
+      "mentoring",
+      "developer-growth"
+    ],
+    "impact": "Created and managed recurring engineering lunch-and-learn sessions featuring technical knowledge sharing across the organization."
+  },
+
+  {
+    "id": "ENT-003",
+    "title": "Reduced Critical Product Defects",
+    "company": "Entrata",
+    "category": "Delivery",
+    "tags": [
+      "quality",
+      "engineering-management"
+    ],
+    "impact": "Reduced accounting product bug backlog by 70 percent while maintaining delivery commitments.",
+    "metrics": {
+      "bug_reduction_percent": 70
+    }
+  },
+
+  {
+    "id": "EXE-001",
+    "title": "Rebuilt Failed Sample Management Platform",
+    "company": "Exevision",
+    "category": "Technical Leadership",
+    "tags": [
+      "architecture",
+      "saas",
+      "product-development"
+    ],
+    "impact": "Replaced a failed first-generation implementation with a scalable solution capable of managing tens of thousands of construction material samples."
+  },
+
+  {
+    "id": "EXE-002",
+    "title": "Created Formula-Driven Testing Platform",
+    "company": "Exevision",
+    "category": "Innovation",
+    "tags": [
+      "spreadsheet",
+      "testing",
+      "product-design"
+    ],
+    "impact": "Allowed users to migrate formulas directly from Excel into the testing system while mapping variables to sample data."
+  },
+
+  {
+    "id": "EXE-003",
+    "title": "Illinois DOT Data Migration",
+    "company": "Exevision",
+    "category": "Customer Success",
+    "tags": [
+      "migration",
+      "government",
+      "implementation"
+    ],
+    "impact": "Successfully migrated state transportation agency data from legacy systems into the new platform."
+  }
+]
