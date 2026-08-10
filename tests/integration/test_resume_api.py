@@ -68,12 +68,21 @@ class TestResumeAPI:
 
         response = await client.post(
             f"/api/v1/resume/{job_id}",
-            json={"boosted_accomplishment_ids": ["JJK-002"], "boost_multiplier": 2.0},
+            json={
+                "boosted_accomplishment_ids": ["JJK-002"],
+                "boost_multiplier": 2.0,
+                "export_preferences": {
+                    "reactive_resume_template": "gengar",
+                    "reactive_resume_page_format": "a4",
+                },
+            },
         )
         assert response.status_code == 201
         data = response.json()
         assert data["strategy"]["boosted_accomplishment_ids"] == ["JJK-002"]
         assert data["strategy"]["boost_multiplier"] == 2.0
+        assert data["export_preferences"]["reactive_resume_template"] == "gengar"
+        assert data["export_preferences"]["reactive_resume_page_format"] == "a4"
 
     @pytest.mark.asyncio
     async def test_download_resume_docx(self, client: AsyncClient):

@@ -9,7 +9,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { getProfile, uploadProfile } from "../api/client";
+import { getProfile, refreshProfileFromCanonicalFile, uploadProfile } from "../api/client";
 import type { CandidateProfileResponse } from "../types/api";
 
 interface Props {
@@ -53,6 +53,19 @@ export default function ProfileDialog({ open, onClose }: Props) {
     }
   }
 
+  async function handleRefresh() {
+    setError(null);
+    setLoading(true);
+    try {
+      const data = await refreshProfileFromCanonicalFile();
+      setProfile(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to refresh profile.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Candidate Profile</DialogTitle>
@@ -60,6 +73,9 @@ export default function ProfileDialog({ open, onClose }: Props) {
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Button variant="outlined" onClick={handleLoad} disabled={loading}>
             Load Current Profile
+          </Button>
+          <Button variant="outlined" onClick={handleRefresh} disabled={loading}>
+            Refresh From JSON
           </Button>
           <input
             ref={fileInputRef}

@@ -22,7 +22,7 @@ from app.repositories.job_analysis_repository import JobAnalysisRepository
 from app.repositories.resume_plan_repository import ResumePlanRepository
 from app.schemas.analysis import JobRequirements
 from app.schemas.candidate_profile import CandidateProfileData
-from app.schemas.resume import ResumePlan
+from app.schemas.resume import ExportCapabilities, ExportPreferences, ResumePlan
 from app.services.accomplishment_loader import load_accomplishments
 from app.services.achievement_selection_service import (
     DEFAULT_BOOST_MULTIPLIER,
@@ -33,6 +33,7 @@ from app.services.keyword_coverage_service import KeywordCoverageService
 from app.services.resume_data_model_service import ResumeDataModelService
 from app.services.resume_document_service import MarkdownResumeRenderer, ResumeDocumentService
 from app.services.resume_quality_service import ResumeQualityScoringService
+from app.services.reactive_resume_service import ReactiveResumeService
 from app.services.resume_strategy_service import ResumeStrategyService
 
 logger = logging.getLogger(__name__)
@@ -52,6 +53,7 @@ class ResumeService:
         self.document_service = ResumeDocumentService()
         self.renderer = MarkdownResumeRenderer()
         self.quality_service = ResumeQualityScoringService()
+        self.reactive_resume_service = ReactiveResumeService()
 
     async def build_plan(
         self,
@@ -59,6 +61,7 @@ class ResumeService:
         boosted_accomplishment_ids: list[str] | None = None,
         boost_multiplier: float = DEFAULT_BOOST_MULTIPLIER,
         top_n: int = DEFAULT_TOP_N,
+        export_preferences: ExportPreferences | None = None,
     ) -> ResumePlan:
         profile_record = await self.profile_repo.get_profile()
         if profile_record is None:
@@ -78,6 +81,7 @@ class ResumeService:
             boosted_accomplishment_ids=boosted_accomplishment_ids,
             boost_multiplier=boost_multiplier,
             top_n=top_n,
+            export_preferences=export_preferences,
         )
 
         await self.plan_repo.upsert(job_posting_id, plan.model_dump())
@@ -91,6 +95,7 @@ class ResumeService:
         boosted_accomplishment_ids: list[str] | None = None,
         boost_multiplier: float = DEFAULT_BOOST_MULTIPLIER,
         top_n: int = DEFAULT_TOP_N,
+        export_preferences: ExportPreferences | None = None,
     ) -> ResumePlan:
         """Run the full pipeline purely in-memory (no DB access) — used by tests too."""
         selection = self.achievement_service.select_achievements(
@@ -126,6 +131,16 @@ class ResumeService:
             keyword_coverage=coverage,
             data_model=data_model,
             quality_score=quality_score,
+            export_preferences=export_preferences or ExportPreferences(),
+            export_capabilities=ExportCapabilities(
+                pdf_renderer=(
+                    "reactive-resume"
+                    if self.reactive_resume_service.is_configured()
+                    else "local"
+                ),
+                docx_renderer="local",
+                reactive_resume_configured=self.reactive_resume_service.is_configured(),
+            ),
             markdown=markdown,
         )
 

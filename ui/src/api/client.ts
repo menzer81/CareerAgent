@@ -12,9 +12,11 @@ import type {
   CandidateProfileResponse,
   CoverLetterDraft,
   CoverLetterOptions,
+  ExportPreferences,
   InterviewPrepPlan,
   JobPostingResponse,
   JobPostingSummary,
+  ResumeBuildRequest,
   ResumePlan,
   ScoringResultResponse,
 } from "../types/api";
@@ -96,16 +98,16 @@ export async function getAnalysis(jobId: number): Promise<ScoringResultResponse>
 
 export async function buildResumePlan(
   jobId: number,
-  options?: {
-    boosted_accomplishment_ids?: string[];
-    boost_multiplier?: number;
-    top_n?: number;
-  }
+  options?: ResumeBuildRequest
 ): Promise<ResumePlan> {
   const { data } = await api.post<ResumePlan>(`/resume/${jobId}`, {
     boosted_accomplishment_ids: options?.boosted_accomplishment_ids ?? [],
     boost_multiplier: options?.boost_multiplier ?? 1.5,
     top_n: options?.top_n ?? 4,
+    export_preferences: options?.export_preferences ?? {
+      reactive_resume_template: "onyx",
+      reactive_resume_page_format: "letter",
+    },
   });
   return data;
 }
@@ -119,8 +121,18 @@ export function resumeDocxDownloadUrl(jobId: number): string {
   return `/api/v1/resume/${jobId}/download/docx`;
 }
 
-export function resumePdfDownloadUrl(jobId: number): string {
-  return `/api/v1/resume/${jobId}/download/pdf`;
+export function resumePdfDownloadUrl(jobId: number, preferences?: ExportPreferences): string {
+  const params = new URLSearchParams();
+  if (preferences?.reactive_resume_template) {
+    params.set("template", preferences.reactive_resume_template);
+  }
+  if (preferences?.reactive_resume_page_format) {
+    params.set("page_format", preferences.reactive_resume_page_format);
+  }
+  const query = params.toString();
+  return query
+    ? `/api/v1/resume/${jobId}/download/pdf?${query}`
+    : `/api/v1/resume/${jobId}/download/pdf`;
 }
 
 // ---------- Profile ----------
@@ -143,6 +155,11 @@ export async function uploadProfile(file: File): Promise<CandidateProfileRespons
   const { data } = await api.post<CandidateProfileResponse>("/profile/upload", form, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  return data;
+}
+
+export async function refreshProfileFromCanonicalFile(): Promise<CandidateProfileResponse> {
+  const { data } = await api.post<CandidateProfileResponse>("/profile/refresh");
   return data;
 }
 

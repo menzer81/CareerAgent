@@ -50,3 +50,16 @@ class TestProfileAPI:
         assert "AWS Solutions Architect - Professional" in [
             c["name"] for c in profile["certifications"]
         ]
+
+    @pytest.mark.asyncio
+    async def test_refresh_profile_from_canonical_json(self, client: AsyncClient):
+        await client.put(
+            "/api/v1/profile",
+            json={**SAMPLE_PROFILE_DATA, "full_name": "Stale Profile", "current_title": "Old Title"},
+        )
+
+        response = await client.post("/api/v1/profile/refresh")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["full_name"] == "Brad Breivik"
+        assert data["profile_data"]["current_title"] == "Engineering Leader"

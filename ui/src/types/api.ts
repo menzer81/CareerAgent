@@ -144,6 +144,24 @@ export interface ResumeQualityScore {
   overall_resume_quality: number;
 }
 
+export interface ExportPreferences {
+  reactive_resume_template: string;
+  reactive_resume_page_format: string;
+}
+
+export interface ExportCapabilities {
+  pdf_renderer: string;
+  docx_renderer: string;
+  reactive_resume_configured: boolean;
+}
+
+export interface ResumeBuildRequest {
+  boosted_accomplishment_ids?: string[];
+  boost_multiplier?: number;
+  top_n?: number;
+  export_preferences?: ExportPreferences;
+}
+
 export interface ResumePlan {
   job_posting_id: number;
   selection: AchievementSelectionResult;
@@ -151,6 +169,8 @@ export interface ResumePlan {
   keyword_coverage: KeywordCoverageReport;
   data_model: ResumeDataModel;
   quality_score: ResumeQualityScore;
+  export_preferences: ExportPreferences;
+  export_capabilities: ExportCapabilities;
   markdown: string;
 }
 

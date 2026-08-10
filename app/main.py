@@ -9,7 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.router import router as v1_router
 from app.config import get_settings
 from app.core.logging import configure_logging
-from app.database import init_db
+from app.database import AsyncSessionLocal, init_db
+from app.services.profile_sync_service import sync_canonical_profile
 
 configure_logging()
 
@@ -20,6 +21,9 @@ settings = get_settings()
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Initialize DB on startup."""
     await init_db()
+    async with AsyncSessionLocal() as session:
+        await sync_canonical_profile(session)
+        await session.commit()
     yield
 
 

@@ -5,10 +5,10 @@ import json
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import not_found_exception
 from app.database import get_db
 from app.repositories.candidate_profile_repository import CandidateProfileRepository
 from app.schemas.candidate_profile import CandidateProfileData, CandidateProfileResponse
+from app.services.profile_sync_service import sync_canonical_profile
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
@@ -62,3 +62,17 @@ async def upload_profile(
         profile_data=payload.model_dump(),
     )
     return CandidateProfileResponse.model_validate(profile)
+
+
+@router.post("/refresh", response_model=CandidateProfileResponse, status_code=status.HTTP_200_OK)
+async def refresh_profile_from_canonical_file(
+    db: AsyncSession = Depends(get_db),
+) -> CandidateProfileResponse:
+    """Reload the persisted profile from the canonical data/candidate_profile.json file."""
+    refreshed = await sync_canonical_profile(db)
+    if refreshed is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Canonical profile file not found at data/candidate_profile.json.",
+        )
+    return refreshed

@@ -1,5 +1,8 @@
 """Unit tests for DOCX/PDF resume export service."""
 
+import pytest
+
+from app.schemas.candidate_profile import CandidateProfileData
 from app.schemas.resume import (
     AchievementSelectionResult,
     KeywordCoverageReport,
@@ -36,6 +39,19 @@ def _sample_plan() -> ResumePlan:
     )
 
 
+def _sample_profile() -> CandidateProfileData:
+    return CandidateProfileData(
+        full_name="Jane Smith",
+        current_title="Engineering Director",
+        location="Remote",
+        summary="Experienced engineering leader.",
+        work_history=[],
+        technologies=["Python", "AWS"],
+        certifications=[],
+        education=[],
+    )
+
+
 class TestResumeExportService:
     def test_saves_docx(self):
         service = ResumeExportService()
@@ -45,10 +61,11 @@ class TestResumeExportService:
         assert path.suffix == ".docx"
         assert path.stat().st_size > 0
 
-    def test_saves_pdf(self):
+    @pytest.mark.asyncio
+    async def test_saves_pdf(self):
         service = ResumeExportService()
         plan = _sample_plan()
-        path = service.save_pdf(plan.job_posting_id, plan)
+        path = await service.save_pdf(plan.job_posting_id, plan, _sample_profile())
         assert path.exists()
         assert path.suffix == ".pdf"
         assert path.stat().st_size > 0

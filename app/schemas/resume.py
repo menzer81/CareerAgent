@@ -151,6 +151,30 @@ class ResumeQualityScore(BaseModel):
     overall_resume_quality: float = Field(..., ge=0, le=100)
 
 
+class ExportPreferences(BaseModel):
+    """Rendering preferences for downstream resume exporters."""
+
+    reactive_resume_template: str = "onyx"
+    reactive_resume_page_format: str = "letter"
+
+
+class ExportCapabilities(BaseModel):
+    """Resolved export/runtime capabilities for the current environment."""
+
+    pdf_renderer: str = "local"
+    docx_renderer: str = "local"
+    reactive_resume_configured: bool = False
+
+
+class ResumeBuildRequest(BaseModel):
+    """Request body for building a tailored resume plan."""
+
+    boosted_accomplishment_ids: list[str] = Field(default_factory=list)
+    boost_multiplier: float = 1.5
+    top_n: int = 4
+    export_preferences: ExportPreferences = Field(default_factory=ExportPreferences)
+
+
 class ResumePlan(BaseModel):
     """The full, combined output of the resume pipeline for a job posting."""
 
@@ -160,4 +184,6 @@ class ResumePlan(BaseModel):
     keyword_coverage: KeywordCoverageReport
     data_model: ResumeDataModel
     quality_score: ResumeQualityScore
+    export_preferences: ExportPreferences = Field(default_factory=ExportPreferences)
+    export_capabilities: ExportCapabilities = Field(default_factory=ExportCapabilities)
     markdown: str = ""

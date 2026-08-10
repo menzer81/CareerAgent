@@ -41,6 +41,12 @@ class Settings(BaseSettings):
     # Accomplishment/story bank used by the Achievement Selection Engine
     accomplishments_file: Path = Path("./data/accomplishments.json")
 
+    # Reactive Resume hosted rendering
+    reactive_resume_api_key: str = ""
+    reactive_resume_base_url: str = "https://rxresu.me/api/openapi"
+    reactive_resume_template: str = "onyx"
+    reactive_resume_page_format: str = "letter"
+
     def llm_configured(self) -> bool:
         """Return True if LLM credentials are available."""
         return bool(
@@ -54,6 +60,9 @@ class Settings(BaseSettings):
 
     def cloud_llm_configured(self) -> bool:
         return bool(self.cloud_openai_api_key and self.cloud_openai_model)
+
+    def reactive_resume_configured(self) -> bool:
+        return bool(self.reactive_resume_api_key)
 
 
 @lru_cache(maxsize=1)

@@ -142,7 +142,11 @@ class CandidateProfileData(BaseModel):
 
     full_name: str
     current_title: str
+    email: str | None = None
+    phone: str | None = None
     location: str | None = None
+    linkedin_url: str | None = None
+    website_url: str | None = None
     years_total_experience: float | None = None
     years_management_experience: float | None = None
     summary: str = ""

@@ -6,12 +6,15 @@ import textwrap
 from pathlib import Path
 
 from app.config import get_settings
+from app.schemas.candidate_profile import CandidateProfileData
 from app.schemas.resume import ResumePlan
+from app.services.reactive_resume_service import ReactiveResumeService
 
 
 class ResumeExportService:
     def __init__(self) -> None:
         self.settings = get_settings()
+        self.reactive_resume = ReactiveResumeService()
 
     @staticmethod
     def _markdown_lines(markdown: str) -> list[str]:
@@ -45,16 +48,29 @@ class ResumeExportService:
         doc.save(output_path)
         return output_path
 
-    def save_pdf(self, job_posting_id: int, plan: ResumePlan) -> Path:
+    async def save_pdf(
+        self,
+        job_posting_id: int,
+        plan: ResumePlan,
+        profile: CandidateProfileData,
+    ) -> Path:
+        export_dir = self.settings.reports_dir / "resumes"
+        export_dir.mkdir(parents=True, exist_ok=True)
+        output_path = export_dir / f"job_{job_posting_id}_resume.pdf"
+
+        if self.settings.reactive_resume_configured():
+            pdf_bytes = await self.reactive_resume.render_resume_pdf(profile, plan)
+            output_path.write_bytes(pdf_bytes)
+            return output_path
+
+        return self._save_pdf_locally(output_path, plan)
+
+    def _save_pdf_locally(self, output_path: Path, plan: ResumePlan) -> Path:
         try:
             from reportlab.lib.pagesizes import letter
             from reportlab.pdfgen import canvas
         except ModuleNotFoundError as exc:
             raise RuntimeError("PDF export requires reportlab to be installed.") from exc
-
-        export_dir = self.settings.reports_dir / "resumes"
-        export_dir.mkdir(parents=True, exist_ok=True)
-        output_path = export_dir / f"job_{job_posting_id}_resume.pdf"
 
         c = canvas.Canvas(str(output_path), pagesize=letter)
         width, height = letter

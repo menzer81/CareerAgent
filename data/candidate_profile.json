@@ -1,10 +1,16 @@
 {
   "full_name": "Brad Breivik",
   "current_title": "Engineering Leader",
-  "location": "Tampa, FL",
   "years_total_experience": 15.0,
   "years_management_experience": 7.0,
   "summary": "Engineering leader with 15 years of software delivery experience and 5+ years leading distributed teams. Proven track record of organizational transformation, AI adoption, compliance modernization, cloud enablement, and delivery of mission-critical enterprise platforms. Successfully led engineering organizations through large-scale technical change including AI-assisted development, cloud migration readiness, security compliance automation, and team turnaround initiatives.",
+  "contact": {
+    "name": "Brad Breivik",
+    "email": "brad.breivik@gmail.com",
+    "phone": "(801) 349-0095",
+    "location": "Tampa, FL",
+    "linkedin": "linkedin.com/in/bradbreivik"
+  },
   "work_history": [
     {
       "company": "J.J. Keller & Associates",
