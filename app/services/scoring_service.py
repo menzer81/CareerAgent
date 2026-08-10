@@ -7,6 +7,7 @@ from difflib import SequenceMatcher
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.core.exceptions import AnalysisNotFoundError, NotFoundError
 from app.models.analysis import ScoringResult
 from app.repositories.candidate_profile_repository import CandidateProfileRepository
@@ -23,8 +24,6 @@ from app.schemas.scoring import (
 from app.services.llm.base import BaseLLMProvider
 
 logger = logging.getLogger(__name__)
-
-LLM_TIMEOUT_SECONDS = 8
 
 # Scoring dimension weights (must sum to 1.0)
 WEIGHTS = {
@@ -512,6 +511,7 @@ class ScoringService:
         self.analysis_repo = JobAnalysisRepository(session)
         self.scoring_repo = ScoringResultRepository(session)
         self.llm = llm
+        self.llm_scoring_timeout_seconds = get_settings().llm_scoring_timeout_seconds
 
     async def score_job(self, job_posting_id: int) -> ScoringResult:
         """Score a job posting against the candidate profile."""
@@ -531,11 +531,12 @@ class ScoringService:
             try:
                 result = await asyncio.wait_for(
                     self.llm.score_and_analyze(profile, requirements, job_posting_id),
-                    timeout=LLM_TIMEOUT_SECONDS,
+                    timeout=self.llm_scoring_timeout_seconds,
                 )
             except asyncio.TimeoutError:
                 logger.warning(
-                    "LLM scoring timed out for job_posting_id=%d; falling back to rule-based scoring",
+                    "LLM scoring timed out after %ds for job_posting_id=%d; falling back to rule-based scoring",
+                    self.llm_scoring_timeout_seconds,
                     job_posting_id,
                 )
                 result = rule_based_score(profile, requirements, job_posting_id)

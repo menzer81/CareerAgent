@@ -6,6 +6,7 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.core.exceptions import NotFoundError
 from app.models.analysis import JobAnalysis
 from app.repositories.job_analysis_repository import JobAnalysisRepository
@@ -16,14 +17,13 @@ from app.services.requirement_extraction_service import heuristic_extract_requir
 
 logger = logging.getLogger(__name__)
 
-LLM_TIMEOUT_SECONDS = 8
-
 
 class AnalysisService:
     def __init__(self, session: AsyncSession, llm: BaseLLMProvider | None) -> None:
         self.job_repo = JobPostingRepository(session)
         self.analysis_repo = JobAnalysisRepository(session)
         self.llm = llm
+        self.llm_extract_timeout_seconds = get_settings().llm_extract_timeout_seconds
 
     async def analyze_job(self, job_posting_id: int) -> JobAnalysis:
         """Extract structured requirements from a job posting and persist.
@@ -40,11 +40,12 @@ class AnalysisService:
             try:
                 requirements = await asyncio.wait_for(
                     self.llm.extract_job_requirements(posting.raw_text),
-                    timeout=LLM_TIMEOUT_SECONDS,
+                    timeout=self.llm_extract_timeout_seconds,
                 )
             except asyncio.TimeoutError:
                 logger.warning(
-                    "LLM extraction timed out for job_posting_id=%d; falling back to heuristics",
+                    "LLM extraction timed out after %ds for job_posting_id=%d; falling back to heuristics",
+                    self.llm_extract_timeout_seconds,
                     job_posting_id,
                 )
                 requirements = heuristic_extract_requirements(posting.raw_text)
