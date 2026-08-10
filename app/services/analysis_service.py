@@ -1,6 +1,7 @@
 """Job analysis service — uses LLM to extract structured requirements,
 falling back to rule-based heuristics when no LLM is configured."""
 
+import asyncio
 import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +15,8 @@ from app.services.llm.base import BaseLLMProvider
 from app.services.requirement_extraction_service import heuristic_extract_requirements
 
 logger = logging.getLogger(__name__)
+
+LLM_TIMEOUT_SECONDS = 8
 
 
 class AnalysisService:
@@ -34,7 +37,24 @@ class AnalysisService:
 
         if self.llm is not None:
             logger.info("Extracting requirements via LLM for job_posting_id=%d", job_posting_id)
-            requirements: JobRequirements = await self.llm.extract_job_requirements(posting.raw_text)
+            try:
+                requirements = await asyncio.wait_for(
+                    self.llm.extract_job_requirements(posting.raw_text),
+                    timeout=LLM_TIMEOUT_SECONDS,
+                )
+            except asyncio.TimeoutError:
+                logger.warning(
+                    "LLM extraction timed out for job_posting_id=%d; falling back to heuristics",
+                    job_posting_id,
+                )
+                requirements = heuristic_extract_requirements(posting.raw_text)
+            except Exception as exc:
+                logger.warning(
+                    "LLM extraction failed for job_posting_id=%d; falling back to heuristics: %s",
+                    job_posting_id,
+                    exc,
+                )
+                requirements = heuristic_extract_requirements(posting.raw_text)
         else:
             logger.info(
                 "Extracting requirements via rule-based heuristics for job_posting_id=%d",

@@ -58,3 +58,18 @@ class JobAnalysisResponse(BaseModel):
     analyzed_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class BackgroundAnalysisSubmissionResponse(BaseModel):
+    job_posting_id: int
+    status: str
+    message: str
+    poll_url: str
+
+
+class BackgroundAnalysisStatusResponse(BaseModel):
+    job_posting_id: int
+    status: str
+    message: str
+    result_ready: bool
+    error: str | None = None

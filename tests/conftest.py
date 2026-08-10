@@ -1,6 +1,5 @@
 """Shared pytest fixtures."""
 
-import asyncio
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock
 
@@ -8,7 +7,10 @@ import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import StaticPool
 
+from app import database as app_database
+from app.api.deps import get_llm_provider
 from app.database import Base, get_db
 from app.main import app
 from app.schemas.analysis import JobRequirements
@@ -26,7 +28,12 @@ TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 @pytest_asyncio.fixture(scope="function")
 async def db_engine():
-    engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+    engine = create_async_engine(
+        TEST_DATABASE_URL,
+        echo=False,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield engine
@@ -123,12 +130,24 @@ def mock_llm() -> BaseLLMProvider:
 
 
 @pytest_asyncio.fixture
-async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
+async def client(db_session: AsyncSession, db_engine, mock_llm: BaseLLMProvider) -> AsyncGenerator[AsyncClient, None]:
     """HTTP test client with in-memory database."""
     async def override_get_db():
         yield db_session
 
+    async def override_get_llm_provider():
+        return mock_llm
+
+    app_database.AsyncSessionLocal = async_sessionmaker(
+        db_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+        autocommit=False,
+        autoflush=False,
+    )
+
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_llm_provider] = override_get_llm_provider
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:

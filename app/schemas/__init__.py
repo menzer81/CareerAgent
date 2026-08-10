@@ -1,9 +1,19 @@
+from app.schemas.analysis import JobAnalysisResponse, JobRequirements
 from app.schemas.candidate_profile import (
     CandidateProfileData,
     CandidateProfileResponse,
 )
+from app.schemas.career_documents import (
+    CoverLetterDraft,
+    CoverLetterOptions,
+    CoverLetterResponse,
+    CoverLetterStyle,
+    CoverLetterTone,
+    InterviewPrepPlan,
+    InterviewPrepResponse,
+    InterviewQuestion,
+)
 from app.schemas.job_posting import JobPostingCreate, JobPostingResponse, JobPostingSummary
-from app.schemas.analysis import JobAnalysisResponse, JobRequirements
 from app.schemas.scoring import (
     DimensionScore,
     FullAnalysisResult,
@@ -27,4 +37,12 @@ __all__ = [
     "Recommendation",
     "ScoringBreakdown",
     "ScoringResultResponse",
+    "InterviewQuestion",
+    "InterviewPrepPlan",
+    "InterviewPrepResponse",
+    "CoverLetterDraft",
+    "CoverLetterOptions",
+    "CoverLetterTone",
+    "CoverLetterStyle",
+    "CoverLetterResponse",
 ]

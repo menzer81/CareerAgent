@@ -1,6 +1,8 @@
 """Scoring engine — primary path uses LLM; falls back to rule-based scoring."""
 
+import asyncio
 import logging
+import re
 from difflib import SequenceMatcher
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,6 +24,8 @@ from app.services.llm.base import BaseLLMProvider
 
 logger = logging.getLogger(__name__)
 
+LLM_TIMEOUT_SECONDS = 8
+
 # Scoring dimension weights (must sum to 1.0)
 WEIGHTS = {
     "leadership": 0.20,
@@ -32,6 +36,109 @@ WEIGHTS = {
     "industry": 0.15,
 }
 
+_DELIM_RE = re.compile(r"[^a-z0-9]+")
+
+_TERM_SYNONYMS = {
+    "ai/ml": "ai ml",
+    "mlops": "ml ops",
+    "qa/qc": "qa qc",
+    "sdlc": "software development lifecycle",
+    "ci/cd": "continuous integration continuous delivery",
+    "cloud-native": "cloud native",
+    "manager of managers": "manager-of-managers",
+}
+
+
+def _management_oriented_role(req: JobRequirements) -> bool:
+    managerial_terms = [*req.required_skills, *req.preferred_skills, *req.important_keywords]
+    managerial_hits = sum(1 for term in managerial_terms if _is_managerial_skill(term))
+    return bool(
+        req.manager_of_managers_required
+        or req.director_level_or_above
+        or (req.min_team_size_managed or 0) >= 10
+        or managerial_hits >= 3
+    )
+
+
+def _normalize_term(value: str) -> str:
+    normalized = value.strip().lower()
+    normalized = _TERM_SYNONYMS.get(normalized, normalized)
+    normalized = _DELIM_RE.sub(" ", normalized)
+    normalized = " ".join(normalized.split())
+    return normalized
+
+
+def _has_leadership_scope(profile: CandidateProfileData) -> bool:
+    mgmt = profile.management_experience
+    lexp = profile.leadership_experience
+    return bool(
+        (mgmt.total_years_managing and mgmt.total_years_managing >= 2)
+        or lexp.manager_of_managers
+        or mgmt.org_design_experience
+    )
+
+
+def _is_managerial_skill(term: str) -> bool:
+    t = _normalize_term(term)
+    managerial_keywords = (
+        "agile",
+        "scrum",
+        "kanban",
+        "software development lifecycle",
+        "sdlc",
+        "stakeholder",
+        "capacity",
+        "resource",
+        "quality",
+        "process",
+        "delivery",
+        "operations",
+        "qa",
+        "qc",
+        "leadership",
+        "reporting",
+    )
+    return any(k in t for k in managerial_keywords)
+
+
+def _collect_candidate_skill_signals(profile: CandidateProfileData) -> list[str]:
+    signals: list[str] = []
+
+    signals.extend(profile.technologies)
+    signals.extend(profile.industries)
+
+    if profile.ai_transformation_experience:
+        signals.extend(profile.ai_transformation_experience.highlights)
+
+    if profile.ai_experience:
+        signals.extend(profile.ai_experience.tools_and_frameworks)
+        signals.extend(profile.ai_experience.ai_highlights)
+        signals.extend(profile.ai_experience.agent_use_cases)
+        signals.extend(profile.ai_experience.leadership_impact)
+
+    if profile.management_experience:
+        signals.extend(profile.management_experience.management_highlights)
+
+    if profile.leadership_experience:
+        signals.extend(profile.leadership_experience.leadership_highlights)
+
+    for entry in profile.work_history:
+        signals.append(entry.title)
+        signals.append(entry.description)
+        signals.extend(entry.technologies)
+        signals.extend(entry.leadership_areas)
+        signals.extend(entry.key_accomplishments)
+        signals.extend(entry.industries)
+
+    for cert in profile.certifications:
+        signals.append(cert.name)
+
+    for cloud in profile.cloud_platforms:
+        signals.append(cloud.platform)
+        signals.extend(cloud.areas)
+
+    return [s for s in signals if s]
+
 
 def _fuzzy_overlap(candidate_items: list[str], required_items: list[str]) -> tuple[float, list[str], list[str]]:
     """
@@ -40,14 +147,19 @@ def _fuzzy_overlap(candidate_items: list[str], required_items: list[str]) -> tup
     if not required_items:
         return 1.0, [], []
 
-    candidate_lower = [s.lower() for s in candidate_items]
+    candidate_lower = [_normalize_term(s) for s in candidate_items if s]
     matched: list[str] = []
     missing: list[str] = []
 
     for req in required_items:
-        req_lower = req.lower()
+        req_lower = _normalize_term(req)
         found = any(
-            req_lower in cand or cand in req_lower or SequenceMatcher(None, req_lower, cand).ratio() > 0.8
+            (
+                (len(req_lower) >= 4 and req_lower in cand)
+                or (len(cand) >= 4 and cand in req_lower)
+                or (len(req_lower) < 4 and req_lower in cand.split())
+                or SequenceMatcher(None, req_lower, cand).ratio() > 0.8
+            )
             for cand in candidate_lower
         )
         if found:
@@ -79,8 +191,15 @@ def _score_leadership(profile: CandidateProfileData, req: JobRequirements) -> Di
             score += 15
             matched.append("Director-level or above experience")
         else:
-            score -= 10
-            missing.append("Director-level or above experience preferred")
+            # Soften this penalty for seasoned managers who may not have held
+            # the title yet but have adjacent leadership scope.
+            mgmt_years = profile.management_experience.total_years_managing or 0
+            if mgmt_years >= 7 and profile.management_experience.executive_stakeholder_management:
+                score -= 3
+                missing.append("Director-level title not explicit (adjacent scope detected)")
+            else:
+                score -= 10
+                missing.append("Director-level or above experience preferred")
 
     if req.min_team_size_managed and lexp.largest_team_managed:
         if lexp.largest_team_managed >= req.min_team_size_managed:
@@ -115,10 +234,13 @@ def _score_leadership(profile: CandidateProfileData, req: JobRequirements) -> Di
 
 def _score_technical(profile: CandidateProfileData, req: JobRequirements) -> DimensionScore:
     all_required = req.required_skills + req.preferred_skills
-    candidate_tech = profile.technologies + [
-        tech for entry in profile.work_history for tech in entry.technologies
-    ]
+    candidate_tech = _collect_candidate_skill_signals(profile)
     ratio, matched, missing = _fuzzy_overlap(candidate_tech, all_required)
+    # For leadership-heavy jobs, reward managerial/process signal overlap.
+    if all_required and _has_leadership_scope(profile):
+        managerial_hits = sum(1 for skill in all_required if _is_managerial_skill(skill))
+        if managerial_hits:
+            ratio = min(1.0, ratio + (0.08 * managerial_hits / max(1, len(all_required))))
     score = round(ratio * 100, 1)
     explanation = (
         f"Technical match: {len(matched)}/{len(all_required)} required/preferred skills found. "
@@ -136,8 +258,30 @@ def _score_cloud(profile: CandidateProfileData, req: JobRequirements) -> Dimensi
             missing=[],
         )
     candidate_cloud = profile.cloud_platform_names + profile.technologies
+    for cloud in profile.cloud_platforms:
+        candidate_cloud.extend(cloud.areas)
+    for cert in profile.certifications:
+        candidate_cloud.append(cert.name)
     ratio, matched, missing = _fuzzy_overlap(candidate_cloud, req.cloud_requirements)
     score = round(ratio * 100, 1)
+    if (
+        _has_leadership_scope(profile)
+        and req.cloud_requirements
+        and (req.director_level_or_above or req.manager_of_managers_required or (req.min_team_size_managed or 0) >= 20)
+        and score < 55
+    ):
+        # Leadership roles often require cloud direction rather than deep
+        # implementation of every listed platform.
+        score = 55.0
+    elif (
+        _has_leadership_scope(profile)
+        and _management_oriented_role(req)
+        and len(req.cloud_requirements) >= 2
+        and score < 45
+    ):
+        # For manager roles, partial cloud overlap (plus leadership background)
+        # is often sufficient for initial screening.
+        score = 45.0
     explanation = f"Cloud match: {len(matched)}/{len(req.cloud_requirements)} cloud requirements met."
     return DimensionScore(score=score, explanation=explanation, matched=matched, missing=missing)
 
@@ -160,10 +304,26 @@ def _score_ai(profile: CandidateProfileData, req: JobRequirements) -> DimensionS
         ai_signals.append("RAG")
     if ai_exp.ai_agents:
         ai_signals.append("AI agents")
+    if ai_exp.copilot_champion:
+        ai_signals.append("AI-assisted development")
+    if ai_exp.organization_ai_adoption:
+        ai_signals.append("organizational AI adoption")
+    ai_signals.extend(ai_exp.ai_highlights)
+    ai_signals.extend(ai_exp.agent_use_cases)
+    ai_signals.extend(ai_exp.leadership_impact)
     ai_signals.extend(ai_exp.tools_and_frameworks)
 
     ratio, matched, missing = _fuzzy_overlap(ai_signals, req.ai_requirements)
     score = round(ratio * 100, 1)
+    ai_req_norm = {_normalize_term(x) for x in req.ai_requirements}
+    if (
+        _has_leadership_scope(profile)
+        and _management_oriented_role(req)
+        and profile.ai_transformation_experience
+        and ("ai ml" in ai_req_norm or "ml ops" in ai_req_norm or "automation" in ai_req_norm)
+        and score < 50
+    ):
+        score = 50.0
     explanation = f"AI match: {len(matched)}/{len(req.ai_requirements)} AI requirements met."
     return DimensionScore(score=score, explanation=explanation, matched=matched, missing=missing)
 
@@ -216,6 +376,22 @@ def _score_industry(profile: CandidateProfileData, req: JobRequirements) -> Dime
     ]
     ratio, matched, missing = _fuzzy_overlap(candidate_industries, req.industry_domain)
     score = round(ratio * 100, 1)
+    if score == 0.0 and (req.director_level_or_above or req.manager_of_managers_required or (req.min_team_size_managed or 0) >= 20):
+        req_lower = {_normalize_term(x) for x in req.industry_domain}
+        cand_lower = {_normalize_term(x) for x in candidate_industries}
+        regulated_req = {"healthcare", "diagnostics", "pharmacy", "government", "banking", "fintech"}
+        regulated_cand = {"compliance", "regulated", "government", "fintech", "payments"}
+        if req_lower.intersection(regulated_req) and cand_lower.intersection(regulated_cand):
+            score = 40.0
+            matched.append("Regulated-industry adjacency")
+    elif score == 0.0 and _management_oriented_role(req):
+        req_lower = {_normalize_term(x) for x in req.industry_domain}
+        cand_lower = {_normalize_term(x) for x in candidate_industries}
+        if ({"healthcare", "diagnostics"}.intersection(req_lower)) and (
+            {"compliance", "regulated", "payments", "fintech"}.intersection(cand_lower)
+        ):
+            score = 35.0
+            matched.append("Healthcare-regulated adjacency")
     explanation = f"Industry match: {len(matched)}/{len(req.industry_domain)} domains aligned."
     return DimensionScore(score=score, explanation=explanation, matched=matched, missing=missing)
 
@@ -352,7 +528,24 @@ class ScoringService:
 
         if self.llm is not None:
             logger.info("Using LLM for scoring job_posting_id=%d", job_posting_id)
-            result = await self.llm.score_and_analyze(profile, requirements, job_posting_id)
+            try:
+                result = await asyncio.wait_for(
+                    self.llm.score_and_analyze(profile, requirements, job_posting_id),
+                    timeout=LLM_TIMEOUT_SECONDS,
+                )
+            except asyncio.TimeoutError:
+                logger.warning(
+                    "LLM scoring timed out for job_posting_id=%d; falling back to rule-based scoring",
+                    job_posting_id,
+                )
+                result = rule_based_score(profile, requirements, job_posting_id)
+            except Exception as exc:
+                logger.warning(
+                    "LLM scoring failed for job_posting_id=%d; falling back to rule-based scoring: %s",
+                    job_posting_id,
+                    exc,
+                )
+                result = rule_based_score(profile, requirements, job_posting_id)
         else:
             logger.info("Using rule-based scoring for job_posting_id=%d", job_posting_id)
             result = rule_based_score(profile, requirements, job_posting_id)

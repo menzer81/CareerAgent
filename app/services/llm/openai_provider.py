@@ -9,6 +9,7 @@ Uses the openai SDK with a configurable base_url — works with:
 
 import json
 import logging
+from typing import Any
 
 from openai import AsyncOpenAI
 
@@ -25,6 +26,11 @@ from app.schemas.scoring import (
 from app.services.llm.base import BaseLLMProvider
 
 logger = logging.getLogger(__name__)
+
+_LLM_PATH_STATS = {
+    "extract": {"native": 0, "adapted": 0},
+    "score": {"native": 0, "adapted": 0},
+}
 
 _EXTRACT_SYSTEM_PROMPT = """You are an expert talent analyst. Extract structured requirements
 from a job posting and return valid JSON matching the provided schema exactly.
@@ -44,13 +50,268 @@ A score of 0-100 where: 90-100=exceptional match, 70-89=strong match, 50-69=mode
 below 50=significant gap."""
 
 
+def _try_parse_json_object(raw_text: str) -> tuple[dict[str, Any], str]:
+    """Parse the first JSON object found in raw_text.
+
+    Some local models return extra prose before/after JSON. This helper scans
+    for a decodable JSON object rather than requiring a perfect raw object.
+    """
+    text = raw_text.strip()
+    decoder = json.JSONDecoder()
+    if text.startswith("{"):
+        try:
+            obj, end = decoder.raw_decode(text)
+            if isinstance(obj, dict):
+                mode = "direct" if end == len(text) else "prefixed"
+                return obj, mode
+        except json.JSONDecodeError:
+            pass
+
+    for idx, ch in enumerate(raw_text):
+        if ch != "{":
+            continue
+        try:
+            obj, _end = decoder.raw_decode(raw_text[idx:])
+            if isinstance(obj, dict):
+                return obj, "scanned"
+        except json.JSONDecodeError:
+            continue
+    raise ValueError("No JSON object found in model response")
+
+
+def _extract_response_json_payload(response: Any) -> tuple[dict[str, Any], str, str]:
+    """Extract JSON payload from chat completion response.
+
+    OpenAI-compatible local providers may emit an empty `content` string and
+    place output-like text in a `reasoning` field. We prefer `content` but
+    fall back to `reasoning` when needed.
+    """
+    message = response.choices[0].message
+    content = (message.content or "").strip()
+    reasoning = (getattr(message, "reasoning", None) or "").strip()
+
+    source = "content" if content else "reasoning"
+    raw = content or reasoning
+    if not raw:
+        raise ValueError("Model response did not include content or reasoning text")
+
+    payload, parse_mode = _try_parse_json_object(raw)
+    return payload, source, parse_mode
+
+
+_DIMENSION_WEIGHTS = {
+    "leadership_match": 0.20,
+    "technical_match": 0.25,
+    "cloud_match": 0.15,
+    "ai_match": 0.10,
+    "management_scope_match": 0.15,
+    "industry_match": 0.15,
+}
+
+
+def _normalize_str_list(value: Any) -> list[str]:
+    if isinstance(value, list):
+        return [str(v).strip() for v in value if str(v).strip()]
+    if isinstance(value, str):
+        parts = [p.strip() for p in value.split(",")]
+        return [p for p in parts if p]
+    return []
+
+
+def _clamp_score(value: Any, default: float = 0.0) -> float:
+    try:
+        score = float(value)
+    except (TypeError, ValueError):
+        score = default
+    return max(0.0, min(100.0, score))
+
+
+def _pick_value(payload: dict[str, Any], aliases: list[str]) -> Any:
+    for alias in aliases:
+        if alias in payload:
+            return payload.get(alias)
+    nested_scores = payload.get("scores")
+    if isinstance(nested_scores, dict):
+        for alias in aliases:
+            if alias in nested_scores:
+                return nested_scores.get(alias)
+    return None
+
+
+def _normalize_dimension(payload: dict[str, Any], aliases: list[str], label: str) -> dict[str, Any]:
+    raw = _pick_value(payload, aliases)
+    if isinstance(raw, dict):
+        score = _clamp_score(raw.get("score"), default=0.0)
+        explanation = str(raw.get("explanation") or f"{label} score from LLM response.")
+        matched = _normalize_str_list(raw.get("matched"))
+        missing = _normalize_str_list(raw.get("missing"))
+        return {
+            "score": score,
+            "explanation": explanation,
+            "matched": matched,
+            "missing": missing,
+        }
+
+    score = _clamp_score(raw, default=0.0)
+    return {
+        "score": score,
+        "explanation": f"{label} score from LLM response.",
+        "matched": [],
+        "missing": [],
+    }
+
+
+def _normalize_recommendation(raw: Any, overall_score: float) -> str:
+    text = str(raw or "").strip().lower()
+    if "strong" in text:
+        return Recommendation.STRONG_APPLY.value
+    if "stretch" in text:
+        return Recommendation.STRETCH_OPPORTUNITY.value
+    if "low" in text:
+        return Recommendation.LOW_PRIORITY.value
+    if text == "apply" or " apply" in text:
+        return Recommendation.APPLY.value
+
+    if overall_score >= 85:
+        return Recommendation.STRONG_APPLY.value
+    if overall_score >= 70:
+        return Recommendation.APPLY.value
+    if overall_score >= 55:
+        return Recommendation.STRETCH_OPPORTUNITY.value
+    return Recommendation.LOW_PRIORITY.value
+
+
+def _normalize_full_analysis_payload(payload: dict[str, Any], job_posting_id: int) -> tuple[dict[str, Any], str]:
+    """Normalize variant LLM outputs into FullAnalysisResult schema.
+
+    Some local models return flattened or partially structured scoring objects.
+    This adapter maps common variants into the strict schema our API persists.
+    """
+    if "scoring" in payload and "gap_analysis" in payload:
+        normalized = dict(payload)
+        normalized.setdefault("job_posting_id", job_posting_id)
+        return normalized, "native"
+
+    leadership = _normalize_dimension(
+        payload,
+        ["leadership_match", "leadership", "leadership_score"],
+        "Leadership",
+    )
+    technical = _normalize_dimension(
+        payload,
+        ["technical_match", "technical", "technical_score"],
+        "Technical",
+    )
+    cloud = _normalize_dimension(
+        payload,
+        ["cloud_match", "cloud", "cloud_score"],
+        "Cloud",
+    )
+    ai = _normalize_dimension(
+        payload,
+        ["ai_match", "ai", "ai_score", "ml_match"],
+        "AI/ML",
+    )
+    management_scope = _normalize_dimension(
+        payload,
+        ["management_scope_match", "management_scope", "management", "management_score"],
+        "Management Scope",
+    )
+    industry = _normalize_dimension(
+        payload,
+        ["industry_match", "industry", "industry_score"],
+        "Industry",
+    )
+
+    inferred_overall = round(
+        leadership["score"] * _DIMENSION_WEIGHTS["leadership_match"]
+        + technical["score"] * _DIMENSION_WEIGHTS["technical_match"]
+        + cloud["score"] * _DIMENSION_WEIGHTS["cloud_match"]
+        + ai["score"] * _DIMENSION_WEIGHTS["ai_match"]
+        + management_scope["score"] * _DIMENSION_WEIGHTS["management_scope_match"]
+        + industry["score"] * _DIMENSION_WEIGHTS["industry_match"],
+        1,
+    )
+
+    scoring_block = payload.get("scoring") if isinstance(payload.get("scoring"), dict) else {}
+    overall_score = _clamp_score(
+        scoring_block.get("overall_score", payload.get("overall_score", inferred_overall)),
+        default=inferred_overall,
+    )
+    recommendation = _normalize_recommendation(
+        scoring_block.get("recommendation", payload.get("recommendation")),
+        overall_score,
+    )
+    recommendation_reasoning = str(
+        scoring_block.get("recommendation_reasoning")
+        or payload.get("recommendation_reasoning")
+        or "Recommendation inferred from normalized LLM scoring output."
+    )
+
+    gap_payload = payload.get("gap_analysis") if isinstance(payload.get("gap_analysis"), dict) else payload
+    gap_analysis = {
+        "missing_experiences": _normalize_str_list(gap_payload.get("missing_experiences")),
+        "missing_keywords": _normalize_str_list(
+            gap_payload.get("missing_keywords") or gap_payload.get("gaps") or gap_payload.get("missing")
+        ),
+        "missing_certifications": _normalize_str_list(gap_payload.get("missing_certifications")),
+        "missing_leadership_signals": _normalize_str_list(gap_payload.get("missing_leadership_signals")),
+        "strengths": _normalize_str_list(gap_payload.get("strengths")),
+        "risks": _normalize_str_list(gap_payload.get("risks") or gap_payload.get("concerns")),
+        "resume_focus_areas": _normalize_str_list(
+            gap_payload.get("resume_focus_areas") or gap_payload.get("recommendations")
+        ),
+    }
+
+    return {
+        "job_posting_id": int(payload.get("job_posting_id", job_posting_id)),
+        "scoring": {
+            "leadership_match": leadership,
+            "technical_match": technical,
+            "cloud_match": cloud,
+            "ai_match": ai,
+            "management_scope_match": management_scope,
+            "industry_match": industry,
+            "overall_score": overall_score,
+            "recommendation": recommendation,
+            "recommendation_reasoning": recommendation_reasoning,
+        },
+        "gap_analysis": gap_analysis,
+    }, "adapted"
+
+
+def get_llm_path_summary() -> dict[str, dict[str, int]]:
+    """Return a shallow copy of the current LLM path counters."""
+    return {stage: dict(counts) for stage, counts in _LLM_PATH_STATS.items()}
+
+
+def _bump_llm_path(stage: str, mode: str) -> None:
+    if stage in _LLM_PATH_STATS and mode in _LLM_PATH_STATS[stage]:
+        _LLM_PATH_STATS[stage][mode] += 1
+
+
 class OpenAIProvider(BaseLLMProvider):
-    def __init__(self, settings: Settings) -> None:
-        self.model = settings.openai_model
+    def __init__(
+        self,
+        settings: Settings,
+        *,
+        api_key: str | None = None,
+        base_url: str | None = None,
+        model: str | None = None,
+        provider_name: str = "openai-compatible",
+    ) -> None:
+        self.model = model or settings.openai_model
+        self.provider_name = provider_name
         self.client = AsyncOpenAI(
-            api_key=settings.openai_api_key,
-            base_url=settings.openai_base_url,
+            api_key=api_key if api_key is not None else settings.openai_api_key,
+            base_url=base_url if base_url is not None else settings.openai_base_url,
         )
+
+    def _temperature(self, default: float) -> float:
+        """Return a temperature that the configured model accepts."""
+        if self.provider_name == "cloud" and self.model.startswith("gpt-5"):
+            return 1.0
+        return default
 
     async def extract_job_requirements(self, job_text: str) -> JobRequirements:
         schema = JobRequirements.model_json_schema()
@@ -69,10 +330,18 @@ JOB POSTING:
                 {"role": "user", "content": user_prompt},
             ],
             response_format={"type": "json_object"},
-            temperature=0.1,
+            temperature=self._temperature(0.1),
         )
-        raw = response.choices[0].message.content or "{}"
-        data = json.loads(raw)
+        data, source, parse_mode = _extract_response_json_payload(response)
+        _bump_llm_path("extract", "native" if source == "content" and parse_mode == "direct" else "adapted")
+        logger.info(
+            "LLM extract payload parsed provider=%s model=%s source=%s parse_mode=%s keys=%d",
+            self.provider_name,
+            self.model,
+            source,
+            parse_mode,
+            len(data),
+        )
         return JobRequirements.model_validate(data)
 
     async def score_and_analyze(
@@ -116,8 +385,18 @@ Recommendation tiers:
                 {"role": "user", "content": user_prompt},
             ],
             response_format={"type": "json_object"},
-            temperature=0.2,
+            temperature=self._temperature(0.2),
         )
-        raw = response.choices[0].message.content or "{}"
-        data = json.loads(raw)
+        data, source, parse_mode = _extract_response_json_payload(response)
+        normalized, normalization_mode = _normalize_full_analysis_payload(data, job_posting_id)
+        _bump_llm_path("score", "native" if normalization_mode == "native" else "adapted")
+        logger.info(
+            "LLM scoring payload normalized provider=%s model=%s source=%s parse_mode=%s normalization=%s",
+            self.provider_name,
+            self.model,
+            source,
+            parse_mode,
+            normalization_mode,
+        )
+        data = normalized
         return FullAnalysisResult.model_validate(data)

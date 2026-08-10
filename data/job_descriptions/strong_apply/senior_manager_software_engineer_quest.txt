@@ -1,0 +1,69 @@
+About the job
+Job Description
+
+Oversee and support a team of back-end, front-end, and full-stack developers, as well as QA and QC resources. In this dotted-line leadership role, you will focus on process efficiency, quality improvements, team utilization, and reporting while working closely with Agile teams and prioritization frameworks.
+
+Responsibilities
+
+Team Oversight & Coordination
+
+ Oversee the design and execution by the development teams. Ensure strategic priorities are met, resource allocations are aligned to development and business timelines, and workflows are efficient and scalable.
+ Partner with Scrum Masters, Product Managers, Architects, and Technical Leads to ensure development activities align with business priorities and software development methodology processes i.e. Agile, Waterfall, etc.
+ Serve as point of contact for leadership on development teams’ capacity planning, performance, utilization, and operational needs.
+ Follow and assure team adherence to SDLC framework.
+
+Process & Quality Improvements
+
+ Identify and implement efficiencies in development workflows, Agile ceremonies, and collaboration across teams.
+ Drive process standardization to improve development velocity, reduce bottlenecks, and enhance overall team productivity.
+ Work closely with QA and QC teams to ensure testing best practices are consistently followed.
+ Accountable for solutions delivering high-quality data and insights to customers and internal stakeholders.
+
+Resource Utilization & Reporting
+
+ Monitor and report on team utilization, capacity, and workload distribution to support optimal resource allocation.
+ Track and analyze development spend to ensure efficient use of resources and budget adherence.
+ Provide leadership with regular reports on development progress, risks, and operational insights.
+ Ensure alignment with current and emerging technology best practices, dependencies (e.g., enterprise plan of record, key technology changes), and assists in funding discussions.
+
+Collaboration & Stakeholder Engagement
+
+ Act as a liaison between development teams, product management, and senior leadership to ensure smooth execution of priorities.
+ Partner with HR and direct line managers to support hiring, onboarding, and career development initiatives for development team members.
+ Foster a culture of collaboration, accountability, and continuous improvement within the software development function.
+ Collaborate across the businesses to solicit requirements and drive value in a matrixed organization.
+
+Qualifications
+
+Required Work Experience: 
+
+ 5+ years of experience in software development, project management, or operations, with at least 2 years in a leadership role.
+
+Preferred Work Experience
+
+ Prior experience with enterprise data platforms, analytics solutions, or cloud-based development environments.
+ Knowledge of continuous improvement processes, software testing best practices, and development lifecycle optimization.
+ Familiarity with AI/ML-based development, MLOps, and automation.
+ Familiarity with emerging technology and advocating for relevant adoption.
+
+Knowledge
+
+ Strong understanding of Agile development methodologies (Scrum, Kanban, SAFe, etc.) and how to support teams within these frameworks.
+ Familiarity with cloud-based platforms such as AWS, Snowflake, and Google Cloud Platform.
+ Experience with process improvement, operational efficiency, and reporting tools is a plus.
+
+Knowledge or prior experience using Jira, GitHub, Confluence, Clarity
+
+Skills
+
+ Experience working with cross-functional development teams, including developers and QA/QC professionals.
+ Ability to analyze and report on team performance, utilization, and spend.
+ Excellent communication and stakeholder management skills.
+
+About The Team
+
+Quest Diagnostics honors our service members and encourages veterans to apply.
+
+While we appreciate and value our staffing partners, we do not accept unsolicited resumes from agencies. Quest will not be responsible for paying agency fees for any individual as to whom an agency has sent an unsolicited resume.
+
+Equal Opportunity Employer: Race/Color/Sex/Sexual Orientation/Gender Identity/Religion/National Origin/Disability/Vets or any other legally protected status.

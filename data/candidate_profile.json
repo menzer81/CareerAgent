@@ -9,7 +9,7 @@
     {
       "company": "J.J. Keller & Associates",
       "title": "Software Development Manager",
-      "start_date": "2023",
+      "start_date": "2024",
       "end_date": null,
       "is_current": true,
       "description": "Led engineering teams responsible for managed services software products and operational excellence initiatives. Oversaw software delivery, compliance programs, vendor management, AI adoption, and engineering process improvements.",
@@ -57,8 +57,8 @@
     {
       "company": "SitusAMC",
       "title": "Software Development Manager",
-      "start_date": "2021",
-      "end_date": "2023",
+      "start_date": "2023",
+      "end_date": "2024",
       "is_current": false,
       "description": "Managed engineering staff and coordinated development activities across domestic and offshore teams. Responsible for delivery oversight, modernization efforts, and technical leadership.",
       "team_size": 15,
@@ -91,9 +91,9 @@
     },
     {
       "company": "Entrata",
-      "title": "Software Development Manager",
-      "start_date": "2018",
-      "end_date": "2021",
+      "title": "Vice President of Development Management",
+      "start_date": "2021",
+      "end_date": "2023",
       "is_current": false,
       "description": "Managed multiple engineering teams responsible for critical accounting systems supporting property management customers. Led large-scale technical enablement and cloud transformation preparation initiatives.",
       "team_size": 10,
@@ -132,9 +132,9 @@
     },
     {
       "company": "Exevision",
-      "title": "Vice President of Development Management",
-      "start_date": "2013",
-      "end_date": "2018",
+      "title": "Lead Software Engineer / Project Manager",
+      "start_date": "2016",
+      "end_date": "2021",
       "is_current": false,
       "description": "Led software development efforts for transportation and construction quality management platforms serving state departments of transportation and engineering organizations.",
       "team_size": 3,
@@ -194,12 +194,15 @@
     "largest_team_managed": 8,
     "largest_org_managed": 12,
     "manager_of_managers": true,
+    "manager_of_managers_depth": "limited",
     "director_level_or_above": false,
     "executive_level": false,
-    "vp_or_above": false,
+    "vp_or_above": true,
+    "vp_level_depth": "limited",
     "managed_multiple_teams": true,
     "cross_functional_leadership": true,
-    "board_presentations": true,
+    "board_presentations": false,
+    "executive_presentations": true,
     "p_and_l_responsibility": false,
     "hiring_scale": "Grew engineering org from 6 to 12 in 6 months",
     "interviews_conducted": 80,
@@ -451,15 +454,9 @@
   ],
   "certifications": [
     {
-      "name": "AWS Solutions Architect — Professional",
-      "issuer": "Amazon Web Services",
-      "year": 2022,
-      "is_active": true
-    },
-    {
-      "name": "Certified Kubernetes Administrator (CKA)",
-      "issuer": "CNCF",
-      "year": 2021,
+      "name": "Microsoft AZ-900: Microsoft Azure Fundamentals",
+      "issuer": "Microsoft",
+      "year": 2026,
       "is_active": true
     }
   ],

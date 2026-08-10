@@ -1,0 +1,84 @@
+ob Details
+Skills
+Delivery Management
+Customer Engagement
+Payment Processing
+Reporting
+Mentorship
+Recruiting
+FOCUS
+Accountability
+Innovation
+Continuous Improvement
+Apache Velocity
+Roadmaps
+Business Strategy
+Design Review
+Regulatory Compliance
+Privacy
+
+Show more
+Summary
+Who We Are
+
+HungerRush is a leading provider of integrated restaurant technology solutions. HungerRush 360 is our flagship cloud POS system that makes it easier to delight guests, drive loyalty, and manage restaurants from anywhere. The all-in-one system integrates digital ordering (including AI-powered text and talk ordering), delivery management, customer engagement, restaurant management, and payment processing features with flexible software designed to give operators more insight into their customers, more control over their operations, and more power to profitably grow their business. Learn more at ;br>
+Overview
+
+HungerRush is seeking a Director, Software Engineering to lead and scale our engineering teams in delivering high-quality software solutions for the restaurant technology industry. Reporting directly to the CTO, this leader will drive engineering strategy, execution, and culture across multiple teams. The ideal candidate combines deep technical credibility with strong people leadership skills and a track record of delivering complex software products in a SaaS environment.
+
+This is a hands-on leadership role for someone who stays close to the code and has a proven track record of maturing an engineering organization - instilling engineering metrics, sharpening process, and upskilling teams. We are looking for a pragmatic, action-oriented leader who makes data-driven decisions. HungerRush has deeply embraced an AI-driven software development lifecycle, and this leader will champion that transformation across their teams.
+
+Essential Responsibilities and Duties
+
+Leadership & People
+Lead, mentor, and grow a high-performing organization of software engineers across multiple teams, including managers and senior individual contributors
+Manage hiring, performance, and career development for direct reports; build a strong bench of engineering talent through effective recruiting and retention
+Develop engineering managers with a focus on accountability, goal-setting, and career pathing - build leaders who can operate independently and drive outcomes
+Champion a culture of accountability, innovation, urgency, and continuous improvement across the engineering organization
+
+Engineering Maturity & Execution
+Own the maturation of engineering practices - establish and track meaningful engineering metrics and use data to drive decisions and demonstrate progress
+Establish and continuously improve engineering processes, standards, and best practices to accelerate delivery velocity while maintaining quality and reliability
+Be pragmatic and action-oriented: identify bottlenecks, make calls with incomplete information, and keep teams moving - avoid analysis paralysis
+Own the end-to-end software development lifecycle for assigned product areas, from architecture and design through delivery, quality, and ongoing operations
+Partner with Engineering leaders to define and execute the engineering roadmap, ensuring alignment with HungerRush's business strategy and product priorities
+
+Technical Excellence & AI-Driven SDLC
+Stay close to the code - actively participate in design reviews, architecture decisions, and code-level discussions; be credible and respected by the engineers you lead
+Champion HungerRush's AI-driven SDLC: drive adoption of AI-assisted development tooling and workflows, and help set best practices for how AI accelerates engineering throughput and quality
+Upskill engineers at all levels - identify skill gaps, invest in growth, and create opportunities to take on more complex technical challenges
+Ensure adherence to security, compliance, and data privacy standards across all engineering deliverables
+
+Cross-Functional Partnership
+Collaborate cross-functionally with Product, Design, DevOps, QA, and business stakeholders to drive effective planning, prioritization, and execution
+Translate technical concepts for executive and non-technical audiences without losing the technical truth
+Manage resource allocation, and vendor relationships as needed
+
+Required Qualifications
+Bachelor's degree in Computer Science, Software Engineering, or a related field (Master's degree preferred)
+10+ years of progressive software engineering experience, including 5+ years in engineering leadership or management roles
+Demonstrated success leading teams of 10+ engineers in a SaaS or cloud-native product environment
+Proven track record of maturing an engineering organization - implementing engineering metrics, improving process, and measurably raising the bar on delivery and quality
+Demonstrated success leading teams of 10+ engineers in a SaaS or cloud-native product environment
+Strong technical background with hands-on experience in modern software development, including cloud platforms, distributed systems, and RESTful API design ((preferably on the Microsoft stack)
+Experience building and scaling multi-tenant SaaS platforms serving high transaction volumes
+Proficiency in Agile/Scrum methodologies and experience driving continuous delivery practices
+Demonstrated ability to make data-driven decisions using engineering metrics
+Experience managing and developing engineering managers, including performance management, goal-setting, and career pathing
+Exceptional communication and stakeholder management skills; ability to translate technical concepts for executive and non-technical audiences
+Proven ability to build and maintain a healthy engineering culture in a distributed, remote-first organization
+
+Preferred Qualifications
+Experience in eCommerce, digital ordering, restaurant technology, point-of-sale, payments, or adjacent hospitality/retail technology sectors
+Hands-on experience with AI-assisted development practices and tooling - either adopting or leading the adoption of AI-driven SDLC workflows
+Familiarity with AI/ML integration in consumer or operator-facing products
+Experience with front-end frameworks including Angular, React, Vue.js, and Bootstrap
+Prior experience in a high-growth, fast-moving, or post-acquisition integration environment
+
+Additional Details
+
+This position is open to candidates who are authorized to work in the United States, without sponsorship, either now or in the future. At this time, and in the foreseeable future, HungerRush is not able to support assistance with additional visa sponsorship, regarding this specific position.
+
+Disclaimer: This Job Description indicates the general nature and level of work expected of the incumbent(s). It is not designed to cover or contain a comprehensive listing of activities, duties or responsibilities required of the incumbent. Incumbent(s) may be asked to perform other duties in addition to those described above.
+
+HungerRush is an Equal Opportunity Employer and does not unlawfully discriminate on the basis of any status or condition protected by applicable federal, state, or local municipal law.

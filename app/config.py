@@ -26,12 +26,34 @@ class Settings(BaseSettings):
     openai_base_url: str = "https://api.openai.com/v1"
     openai_model: str = "gpt-4o"
 
+    # Optional dual-provider setup
+    llm_routing_mode: str = "single"  # single | local_first | cloud_first
+    local_openai_api_key: str = ""
+    local_openai_base_url: str = ""
+    local_openai_model: str = ""
+    cloud_openai_api_key: str = ""
+    cloud_openai_base_url: str = "https://api.openai.com/v1"
+    cloud_openai_model: str = "gpt-5-mini"
+
     # Reports output directory
     reports_dir: Path = Path("./reports")
 
+    # Accomplishment/story bank used by the Achievement Selection Engine
+    accomplishments_file: Path = Path("./data/accomplishments.json")
+
     def llm_configured(self) -> bool:
         """Return True if LLM credentials are available."""
-        return bool(self.openai_api_key)
+        return bool(
+            self.openai_api_key
+            or self.local_llm_configured()
+            or self.cloud_llm_configured()
+        )
+
+    def local_llm_configured(self) -> bool:
+        return bool(self.local_openai_base_url and self.local_openai_model)
+
+    def cloud_llm_configured(self) -> bool:
+        return bool(self.cloud_openai_api_key and self.cloud_openai_model)
 
 
 @lru_cache(maxsize=1)

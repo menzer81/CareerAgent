@@ -1,0 +1,73 @@
+Overview
+
+When you think of InComm Payments, think of Innovative Payments Technology. We were founded over 30 years ago and continue to be a pioneer in the payment (FinTech) industry. Since our inception, we have grown to be a team of over 3,000 employees in 35 countries around the world. We own over 400 global technical patents and a network that includes over 525,000 points of retail distribution that points to our industry expertise.
+
+InComm Payments works with the most recognized and valued brands in the world, and we are partnered with most of the world’s leading merchants. InComm Payments is highly focused on our people and their growth, and we work hard to make a career at InComm Payments meaningful and rewarding. We value innovation, quality, passion, integrity, and responsibility in all that we do, and we are looking for great people to join our team as we move forward towards a very bright future.
+
+You can learn more about InComm Payments by visiting our Website or connecting with us on LinkedIn, YouTube, Twitter, Facebook, or Instagram.
+
+About This Opportunity
+
+The Senior Manager, Software Engineering is responsible for leading one or more engineering teams delivering complex, high-impact software systems. This role combines strong technical leadership, people management, and operational accountability to ensure reliable delivery, scalability, and alignment with business priorities.
+
+You will drive execution across multiple initiatives while developing engineering talent, shaping architecture decisions, and ensuring operational readiness across systems.
+
+Responsibilities
+
+Leadership & People Management
+
+Lead, coach, and mentor Software Engineers and Engineering Leads across one or more teams 
+Drive talent strategy, including hiring, retention, succession planning, and performance management 
+Set clear expectations, goals, and development plans aligned with organizational priorities 
+
+Delivery & Execution
+
+Own delivery of major initiatives spanning multiple systems or domains 
+Ensure predictable execution through strong planning, prioritization, and resource allocation 
+Drive Agile execution discipline, including sprint planning, backlog management, and delivery metrics 
+Proactively identify risks, dependencies, and bottlenecks; drive resolution 
+
+Technical Leadership
+
+Guide architectural decisions and ensure alignment with enterprise standards and long-term strategy 
+Ensure systems are scalable, resilient, and secure, with appropriate observability and operational readiness 
+Review and influence design, implementation, and testing approaches across teams 
+Drive adoption of modern engineering practices (CI/CD, DevOps, automation, AI-assisted development, etc.) 
+
+Operational Excellence
+
+Own production health, including incident response, root cause analysis, and remediation 
+Ensure readiness across monitoring, alerting, dashboards, and runbooks prior to releases 
+Drive continuous improvements in reliability, performance, and cost efficiency 
+
+Stakeholder Management
+
+Partner with Product, Architecture, and Business stakeholders to define roadmaps and priorities 
+Align engineering execution with business objectives and compliance requirements 
+
+Qualifications
+
+Experience
+
+5-8+ years of software engineering experience 
+3+ years managing engineering teams 
+Proven track record delivering complex, distributed systems in production environments 
+
+Technical Skills
+
+Strong understanding of software architecture and system design 
+Experience with modern development practices (Agile, CI/CD, DevOps) 
+Experience with performance, scalability, and reliability engineering 
+
+Leadership & Execution
+
+Demonstrated ability to scale teams and deliver through others 
+Strong decision-making capability in ambiguous and high-pressure environments 
+Ability to balance technical depth with business priorities 
+
+Success Measures (First 6-12 Months)
+
+Consistent on-time delivery of key initiatives with clear visibility into progress 
+Improved system reliability, performance, and operational readiness 
+Strong team engagement and capability growth 
+Clear alignment between engineering execution and business outcomes 

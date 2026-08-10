@@ -1,0 +1,202 @@
+{
+  "schema_version": "1.0",
+  "description": "Golden job dataset used by tests/integration/test_brad_job_matching.py. Each entry pairs a real-world-style job posting (data/job_descriptions/<job_file>) with hand-verified expected outcomes for Brad's real candidate_profile.json, so future scoring/achievement-selection changes can be validated against known-good results instead of just 'it runs'.",
+  "jobs": [
+    {
+      "job_file": "strong_apply/senior_sdm_ai.md",
+      "category": "strong_apply",
+      "expected_recommendation": "Strong Apply",
+      "expected_score_range": [85, 100],
+      "expected_top_accomplishments_any_of": ["JJK-002", "JJK-003", "JJK-004"],
+      "requirements": {
+        "required_skills": ["GitHub Copilot", "Azure", ".NET", "C#"],
+        "preferred_skills": ["AWS", "Docker"],
+        "manager_of_managers_required": true,
+        "director_level_or_above": false,
+        "cloud_requirements": ["Azure"],
+        "ai_requirements": ["GitHub Copilot", "AI"],
+        "industry_domain": ["Compliance", "SaaS"],
+        "years_of_experience_min": 8,
+        "important_keywords": ["GitHub Copilot", "Azure", "SOC 2", "ISO 27001", "AI Transformation"],
+        "role_summary": "Lead AI-enabled compliance engineering team as a manager of managers."
+      }
+    },
+    {
+      "job_file": "strong_apply/group_engineering_manager.md",
+      "category": "strong_apply",
+      "expected_recommendation": "Strong Apply",
+      "expected_score_range": [85, 100],
+      "expected_top_accomplishments_any_of": ["ENT-001", "ENT-002", "ENT-003", "JJK-002"],
+      "requirements": {
+        "required_skills": ["AWS", "Docker", "Containerization"],
+        "preferred_skills": [".NET"],
+        "manager_of_managers_required": true,
+        "director_level_or_above": false,
+        "cloud_requirements": ["AWS"],
+        "ai_requirements": [],
+        "industry_domain": ["SaaS", "Property Management"],
+        "years_of_experience_min": 8,
+        "important_keywords": ["AWS", "training", "cloud transformation"],
+        "role_summary": "Lead multiple engineering teams and managers for a growing SaaS platform."
+      }
+    },
+    {
+      "job_file": "strong_apply/mgr_II_software_engineering_InComm.txt",
+      "category": "strong_apply",
+      "expected_recommendation": "Strong Apply",
+      "expected_score_range": [84, 92],
+      "expected_top_accomplishments_any_of": ["JJK-004", "ENT-001", "JJK-002"],
+      "requirements": {
+        "required_skills": ["Agile", "CI/CD", "DevOps", "Automation"],
+        "preferred_skills": ["AI-assisted development"],
+        "manager_of_managers_required": false,
+        "director_level_or_above": false,
+        "cloud_requirements": [],
+        "ai_requirements": ["AI-assisted development"],
+        "industry_domain": ["FinTech", "Payments"],
+        "years_of_experience_min": 6,
+        "important_keywords": ["delivery metrics", "incident response", "monitoring", "reliability", "compliance"],
+        "role_summary": "Lead one or more software engineering teams delivering high-impact systems in fintech/payments."
+      }
+    },
+    {
+      "job_file": "strong_apply/senior_manager_software_engineer_quest.txt",
+      "category": "strong_apply",
+      "expected_recommendation": "Stretch Opportunity",
+      "expected_score_range": [54, 64],
+      "expected_top_accomplishments_any_of": ["ENT-001", "JJK-002", "JJK-004"],
+      "requirements": {
+        "required_skills": ["Agile", "Scrum", "Kanban", "SDLC", "QA", "QC"],
+        "preferred_skills": ["AWS", "Snowflake", "Google Cloud Platform", "MLOps", "AI/ML"],
+        "manager_of_managers_required": false,
+        "director_level_or_above": false,
+        "cloud_requirements": ["AWS", "Snowflake", "Google Cloud Platform"],
+        "ai_requirements": ["AI/ML", "MLOps", "automation"],
+        "industry_domain": ["Healthcare", "Diagnostics"],
+        "years_of_experience_min": 5,
+        "important_keywords": ["capacity planning", "process efficiency", "resource utilization", "stakeholder management"],
+        "role_summary": "Dotted-line engineering leadership role focused on process quality, utilization, and cross-functional delivery."
+      }
+    },
+    {
+      "job_file": "apply/director_software_engineering_hunger_rush.txt",
+      "category": "apply",
+      "expected_recommendation": "Apply",
+      "expected_score_range": [74, 84],
+      "expected_top_accomplishments_any_of": ["JJK-002", "ENT-001", "EXE-003"],
+      "requirements": {
+        "required_skills": ["SaaS", "cloud-native", "distributed systems", "REST APIs", "Agile", "Scrum"],
+        "preferred_skills": ["AI-assisted development", "AI/ML", "payments"],
+        "manager_of_managers_required": true,
+        "director_level_or_above": true,
+        "min_team_size_managed": 10,
+        "cloud_requirements": ["AWS", "Azure"],
+        "ai_requirements": ["AI-assisted development", "AI-driven SDLC"],
+        "industry_domain": ["Restaurant Technology", "SaaS", "Payments"],
+        "years_of_experience_min": 10,
+        "important_keywords": ["engineering metrics", "process improvement", "accountability", "security", "data privacy"],
+        "role_summary": "Director role to scale SaaS engineering teams while driving AI-driven SDLC adoption."
+      }
+    },
+    {
+      "job_file": "stretch/director_healthcare_platform.md",
+      "category": "stretch",
+      "expected_recommendation": "Apply",
+      "expected_score_range": [60, 84],
+      "expected_top_accomplishments_any_of": ["JJK-004", "ENT-001", "JJK-002"],
+      "requirements": {
+        "required_skills": ["AWS", "Azure"],
+        "manager_of_managers_required": true,
+        "director_level_or_above": true,
+        "p_and_l_responsibility": true,
+        "min_team_size_managed": 40,
+        "cloud_requirements": ["AWS", "Azure"],
+        "ai_requirements": [],
+        "industry_domain": ["Healthcare"],
+        "years_of_experience_min": 10,
+        "important_keywords": ["HIPAA", "HITRUST", "SOC 2"],
+        "role_summary": "Own a 45-engineer platform organization in a regulated healthcare company."
+      }
+    },
+    {
+      "job_file": "stretch/vp_engineering_govtech.md",
+      "category": "stretch",
+      "expected_recommendation": "Stretch Opportunity",
+      "expected_score_range": [55, 79],
+      "expected_top_accomplishments_any_of": ["ENT-001", "JJK-004", "EXE-003"],
+      "requirements": {
+        "required_skills": ["AWS", "Azure", "Enterprise Architecture Governance"],
+        "preferred_skills": ["Zero Trust Security"],
+        "manager_of_managers_required": true,
+        "director_level_or_above": true,
+        "p_and_l_responsibility": true,
+        "min_team_size_managed": 100,
+        "cloud_requirements": ["AWS", "Azure", "Google Cloud"],
+        "ai_requirements": ["AI", "LLM Governance Framework"],
+        "industry_domain": ["Government", "Public Sector Grants"],
+        "years_of_experience_min": 12,
+        "important_keywords": ["SOC 2", "ISO 27001", "FedRAMP"],
+        "role_summary": "Own engineering strategy across a 200+ engineer GovTech organization."
+      }
+    },
+    {
+      "job_file": "stretch/sr_director_software_engineering.md",
+      "category": "stretch",
+      "expected_recommendation": "Stretch Opportunity",
+      "expected_score_range": [55, 79],
+      "expected_top_accomplishments_any_of": ["JJK-002", "JJK-004", "EXE-003"],
+      "requirements": {
+        "required_skills": [".NET", "CI/CD", "API-first", "modernization", "release engineering"],
+        "preferred_skills": ["Databricks", "Azure", "microservices", "AI/ML"],
+        "manager_of_managers_required": true,
+        "director_level_or_above": true,
+        "p_and_l_responsibility": true,
+        "min_team_size_managed": 40,
+        "cloud_requirements": ["Azure"],
+        "ai_requirements": ["AI-enabled capabilities", "AI/ML integration"],
+        "industry_domain": ["Healthcare", "Pharmacy", "Regulated"],
+        "years_of_experience_min": 12,
+        "important_keywords": ["legacy modernization", "platform transformation", "predictive maintenance", "HIPAA"],
+        "role_summary": "Senior Director role leading large-scale .NET platform modernization with AI-enabled capabilities."
+      }
+    },
+    {
+      "job_file": "low_priority/poor_fit_platform_manager.md",
+      "category": "low_priority",
+      "expected_recommendation": "Low Priority",
+      "expected_score_range": [0, 54],
+      "expected_top_accomplishments_any_of": [],
+      "requirements": {
+        "required_skills": ["Kubernetes", "Go", "Envoy", "Prometheus", "Service Mesh"],
+        "preferred_skills": ["OpenTelemetry"],
+        "manager_of_managers_required": false,
+        "director_level_or_above": false,
+        "cloud_requirements": ["GCP"],
+        "ai_requirements": [],
+        "industry_domain": [],
+        "years_of_experience_min": 8,
+        "important_keywords": ["Kubernetes", "Go", "SRE"],
+        "role_summary": "Hands-on platform/SRE manager for a large multi-cluster Kubernetes fleet."
+      }
+    },
+    {
+      "job_file": "low_priority/poor_fit_java_architect.md",
+      "category": "low_priority",
+      "expected_recommendation": "Low Priority",
+      "expected_score_range": [0, 54],
+      "expected_top_accomplishments_any_of": [],
+      "requirements": {
+        "required_skills": ["Java", "Spring", "Kafka", "gRPC", "Event Sourcing"],
+        "preferred_skills": ["Core Banking"],
+        "manager_of_managers_required": false,
+        "director_level_or_above": false,
+        "cloud_requirements": [],
+        "ai_requirements": [],
+        "industry_domain": ["Banking"],
+        "years_of_experience_min": 12,
+        "important_keywords": ["Java", "Spring", "Kafka"],
+        "role_summary": "Deep individual-contributor Java architecture role with no people management."
+      }
+    }
+  ]
+}

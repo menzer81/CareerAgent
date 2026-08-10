@@ -7,8 +7,15 @@ from app.api.deps import get_llm_provider
 from app.core.exceptions import AnalysisNotFoundError, NotFoundError
 from app.database import get_db
 from app.repositories.job_analysis_repository import JobAnalysisRepository, ScoringResultRepository
-from app.schemas.analysis import JobAnalysisResponse, JobRequirements
+from app.repositories.job_posting_repository import JobPostingRepository
+from app.schemas.analysis import (
+    BackgroundAnalysisStatusResponse,
+    BackgroundAnalysisSubmissionResponse,
+    JobAnalysisResponse,
+    JobRequirements,
+)
 from app.schemas.scoring import FullAnalysisResult, ScoringResultResponse
+from app.services.analysis_background_service import background_analysis_service
 from app.services.analysis_service import AnalysisService
 from app.services.llm.base import BaseLLMProvider
 from app.services.scoring_service import ScoringService
@@ -39,6 +46,50 @@ async def run_analysis(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except AnalysisNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+
+
+@router.post(
+    "/{job_id}/background",
+    response_model=BackgroundAnalysisSubmissionResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def run_analysis_in_background(
+    job_id: int,
+    db: AsyncSession = Depends(get_db),
+    llm: BaseLLMProvider | None = Depends(get_llm_provider),
+) -> BackgroundAnalysisSubmissionResponse:
+    """Queue analysis/scoring work for a job posting and return immediately."""
+    repo = JobPostingRepository(db)
+    posting = await repo.get(job_id)
+    if posting is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"JobPosting {job_id} not found")
+
+    job = background_analysis_service.submit_job(job_id, llm, request_session=db)
+    return BackgroundAnalysisSubmissionResponse(
+        job_posting_id=job.job_posting_id,
+        status=job.status.value,
+        message=job.message,
+        poll_url=f"/api/v1/analysis/{job_id}/status",
+    )
+
+
+@router.get("/{job_id}/status", response_model=BackgroundAnalysisStatusResponse)
+async def get_analysis_status(job_id: int) -> BackgroundAnalysisStatusResponse:
+    """Return the current status of a background analysis job for a posting."""
+    job = background_analysis_service.get_job(job_id)
+    if job is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No background analysis found for job {job_id}.",
+        )
+
+    return BackgroundAnalysisStatusResponse(
+        job_posting_id=job.job_posting_id,
+        status=job.status.value,
+        message=job.message,
+        result_ready=job.status == "succeeded",
+        error=job.error,
+    )
 
 
 @router.post("/{job_id}/extract", response_model=JobAnalysisResponse, status_code=status.HTTP_201_CREATED)
