@@ -9,6 +9,7 @@ import logging
 
 from app.schemas.analysis import JobRequirements
 from app.schemas.candidate_profile import CandidateProfileData
+from app.schemas.resume import AccomplishmentEntry, GeneratedResumeContent, ResumeStrategy
 from app.schemas.scoring import FullAnalysisResult
 from app.services.llm.base import BaseLLMProvider
 
@@ -45,5 +46,30 @@ class FallbackLLMProvider(BaseLLMProvider):
             except Exception as exc:  # pragma: no cover - defensive fallback behavior
                 last_error = exc
                 logger.warning("LLM scoring failed on provider %d/%d: %s", idx, len(self.providers), exc)
+        assert last_error is not None
+        raise last_error
+
+    async def generate_resume_content(
+        self,
+        job_posting_id: int,
+        profile: CandidateProfileData,
+        requirements: JobRequirements,
+        strategy: ResumeStrategy,
+        selected_accomplishments: list[AccomplishmentEntry],
+    ) -> GeneratedResumeContent:
+        last_error: Exception | None = None
+        for idx, provider in enumerate(self.providers, start=1):
+            try:
+                return await provider.generate_resume_content(
+                    job_posting_id, profile, requirements, strategy, selected_accomplishments
+                )
+            except Exception as exc:  # pragma: no cover - defensive fallback behavior
+                last_error = exc
+                logger.warning(
+                    "LLM resume content generation failed on provider %d/%d: %s",
+                    idx,
+                    len(self.providers),
+                    exc,
+                )
         assert last_error is not None
         raise last_error

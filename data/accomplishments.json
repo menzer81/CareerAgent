@@ -11,6 +11,7 @@
       "stakeholder-management"
     ],
     "impact": "Inherited a team without stable management for approximately six months and rebuilt team culture, trust, productivity, and stakeholder relationships within sixty days.",
+    "importance": 9,
     "scope": {
       "direct_reports": 4,
       "managers": 1,
@@ -29,7 +30,8 @@
       "training",
       "innovation"
     ],
-    "impact": "Created GitHub Copilot training materials and led adoption efforts across engineering, QA, and product teams. Materials were adopted by other managers throughout the department."
+    "impact": "Created GitHub Copilot training materials and led adoption efforts across engineering, QA, and product teams. Materials were adopted by other managers throughout the department.",
+    "importance": 10
   },
 
   {
@@ -43,6 +45,7 @@
       "engineering-management"
     ],
     "impact": "Maintained team output despite significant headcount reductions through AI-assisted development practices.",
+    "importance": 9,
     "metrics": {
       "productivity_increase_percent": 30
     }
@@ -60,6 +63,7 @@
       "agents"
     ],
     "impact": "Led creation of AI-driven evidence collection and validation solutions.",
+    "importance": 10,
     "metrics": {
       "soc2_automation_percent": 80,
       "iso27001_automation_percent": 50
@@ -77,6 +81,7 @@
       "leadership"
     ],
     "impact": "Reduced monthly miscellaneous operating expenses from $37,000 to $1,300.",
+    "importance": 9,
     "metrics": {
       "before_cost": 37000,
       "after_cost": 1300
@@ -95,6 +100,7 @@
       "transformation"
     ],
     "impact": "Organized and executed AWS and containerization training for over 500 engineers in the United States and India.",
+    "importance": 9,
     "metrics": {
       "engineers_trained": 500,
       "completion_rate_percent": 98
@@ -111,7 +117,8 @@
       "mentoring",
       "developer-growth"
     ],
-    "impact": "Created and managed recurring engineering lunch-and-learn sessions featuring technical knowledge sharing across the organization."
+    "impact": "Created and managed recurring engineering lunch-and-learn sessions featuring technical knowledge sharing across the organization.",
+    "importance": 5
   },
 
   {
@@ -124,6 +131,7 @@
       "engineering-management"
     ],
     "impact": "Reduced accounting product bug backlog by 70 percent while maintaining delivery commitments.",
+    "importance": 7,
     "metrics": {
       "bug_reduction_percent": 70
     }
@@ -139,7 +147,8 @@
       "saas",
       "product-development"
     ],
-    "impact": "Replaced a failed first-generation implementation with a scalable solution capable of managing tens of thousands of construction material samples."
+    "impact": "Replaced a failed first-generation implementation with a scalable solution capable of managing tens of thousands of construction material samples.",
+    "importance": 7
   },
 
   {
@@ -152,7 +161,8 @@
       "testing",
       "product-design"
     ],
-    "impact": "Allowed users to migrate formulas directly from Excel into the testing system while mapping variables to sample data."
+    "impact": "Allowed users to migrate formulas directly from Excel into the testing system while mapping variables to sample data.",
+    "importance": 5
   },
 
   {
@@ -165,6 +175,7 @@
       "government",
       "implementation"
     ],
-    "impact": "Successfully migrated state transportation agency data from legacy systems into the new platform."
+    "impact": "Successfully migrated state transportation agency data from legacy systems into the new platform.",
+    "importance": 6
   }
 ]

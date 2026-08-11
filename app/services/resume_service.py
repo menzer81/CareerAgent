@@ -30,17 +30,20 @@ from app.services.achievement_selection_service import (
     AchievementSelectionService,
 )
 from app.services.keyword_coverage_service import KeywordCoverageService
+from app.services.llm.base import BaseLLMProvider
+from app.services.resume_content_generation_service import ResumeContentGenerationService
 from app.services.resume_data_model_service import ResumeDataModelService
 from app.services.resume_document_service import MarkdownResumeRenderer, ResumeDocumentService
 from app.services.resume_quality_service import ResumeQualityScoringService
 from app.services.reactive_resume_service import ReactiveResumeService
 from app.services.resume_strategy_service import ResumeStrategyService
+from app.services.resume_validation_service import ResumeValidationService
 
 logger = logging.getLogger(__name__)
 
 
 class ResumeService:
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session: AsyncSession, llm: BaseLLMProvider | None = None) -> None:
         self.profile_repo = CandidateProfileRepository(session)
         self.analysis_repo = JobAnalysisRepository(session)
         self.plan_repo = ResumePlanRepository(session)
@@ -54,6 +57,8 @@ class ResumeService:
         self.renderer = MarkdownResumeRenderer()
         self.quality_service = ResumeQualityScoringService()
         self.reactive_resume_service = ReactiveResumeService()
+        self.content_generation_service = ResumeContentGenerationService(llm)
+        self.validation_service = ResumeValidationService()
 
     async def build_plan(
         self,
@@ -74,7 +79,7 @@ class ResumeService:
         profile = CandidateProfileData.model_validate(profile_record.profile_data)
         requirements = JobRequirements.model_validate(analysis_record.requirements_data)
 
-        plan = self.build_plan_from_data(
+        plan = await self.build_plan_from_data(
             job_posting_id,
             profile,
             requirements,
@@ -87,7 +92,7 @@ class ResumeService:
         await self.plan_repo.upsert(job_posting_id, plan.model_dump())
         return plan
 
-    def build_plan_from_data(
+    async def build_plan_from_data(
         self,
         job_posting_id: int,
         profile: CandidateProfileData,
@@ -97,7 +102,7 @@ class ResumeService:
         top_n: int = DEFAULT_TOP_N,
         export_preferences: ExportPreferences | None = None,
     ) -> ResumePlan:
-        """Run the full pipeline purely in-memory (no DB access) — used by tests too."""
+        """Run the full pipeline (achievement selection through validation)."""
         selection = self.achievement_service.select_achievements(
             job_posting_id,
             requirements,
@@ -118,11 +123,33 @@ class ResumeService:
             coverage,
             accomplishments=self.achievement_service.accomplishments,
         )
+        selected_accomplishments = [
+            acc
+            for acc in self.achievement_service.accomplishments
+            if acc.id in selection.selected_accomplishment_ids
+        ]
+        generated_content = await self.content_generation_service.generate(
+            job_posting_id,
+            profile,
+            requirements,
+            strategy,
+            selected_accomplishments,
+        )
         document = self.document_service.build(
-            profile, data_model, strategy, accomplishments=self.achievement_service.accomplishments
+            profile,
+            data_model,
+            strategy,
+            accomplishments=self.achievement_service.accomplishments,
+            generated_content=generated_content,
         )
         markdown = self.renderer.render(document)
         quality_score = self.quality_service.score(profile, requirements, coverage)
+        validation = self.validation_service.validate(
+            profile,
+            document,
+            generated_content=generated_content,
+            selected_accomplishments=selected_accomplishments,
+        )
 
         return ResumePlan(
             job_posting_id=job_posting_id,
@@ -141,6 +168,8 @@ class ResumeService:
                 docx_renderer="local",
                 reactive_resume_configured=self.reactive_resume_service.is_configured(),
             ),
+            generated_content=generated_content,
+            validation=validation,
             markdown=markdown,
         )
 

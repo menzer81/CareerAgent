@@ -26,6 +26,9 @@ DEFAULT_TOP_N = 5
 _BASE_SCORE = 40.0
 _MAX_MATCH_BONUS = 60.0
 _FUZZY_THRESHOLD = 0.8
+_NEUTRAL_IMPORTANCE = 5
+_IMPORTANCE_WEIGHT = 2.0
+_METRIC_BONUS = 15.0
 
 
 def requirement_signals(req: JobRequirements) -> list[str]:
@@ -88,6 +91,22 @@ def rank_accomplishments(
         matched = [sig for sig in signals if _signal_matches(sig, tokens, text)]
         score = _BASE_SCORE + min(_MAX_MATCH_BONUS, len(matched) * 12.0)
         reasons = [f"Matches '{sig}' requirement" for sig in matched]
+
+        # Priority 2: weight inherently stronger accomplishments higher, independent
+        # of job relevance, using the accomplishment's importance rating.
+        importance_delta = (acc.importance - _NEUTRAL_IMPORTANCE) * _IMPORTANCE_WEIGHT
+        if importance_delta:
+            score += importance_delta
+            if acc.importance >= 9:
+                reasons.append("Signature accomplishment")
+            elif acc.importance <= 3:
+                reasons.append("Supporting accomplishment")
+
+        # Priority 4: quantified/measurable outcomes stand out to reviewers, so
+        # give accomplishments with metrics a ranking bonus.
+        if acc.metrics:
+            score += _METRIC_BONUS
+            reasons.append("Includes a measurable, quantified outcome")
 
         if requirements.manager_of_managers_required and (
             "leadership" in tokens or acc.category.lower() == "leadership"

@@ -30,6 +30,10 @@ def _persona_line(persona: ResumePersona) -> str:
         return "I have repeatedly rebuilt underperforming teams into high-trust, high-output organizations."
     if persona == ResumePersona.GROWTH_ENGINEERING_LEADER:
         return "I excel at scaling engineering teams and systems during high-growth phases."
+    if persona == ResumePersona.CLOUD_TRANSFORMATION_LEADER:
+        return "I lead cloud migration and infrastructure modernization initiatives at scale."
+    if persona == ResumePersona.DIRECTOR_TRACK_CANDIDATE:
+        return "I bring proven manager-of-managers and organizational leadership experience."
     return "I focus on dependable technical delivery and strong people leadership."
 
 

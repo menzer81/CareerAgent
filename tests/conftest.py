@@ -126,6 +126,19 @@ def mock_llm() -> BaseLLMProvider:
             ),
         )
     )
+
+    async def _generate_resume_content(job_posting_id, profile, requirements, strategy, selected_accomplishments):
+        from app.schemas.resume import GeneratedResumeContent
+
+        return GeneratedResumeContent(
+            job_posting_id=job_posting_id,
+            executive_summary=profile.summary,
+            experience_bullets=[],
+            accomplishment_bullets=[],
+            generated_by="static",
+        )
+
+    provider.generate_resume_content = AsyncMock(side_effect=_generate_resume_content)
     return provider
 
 

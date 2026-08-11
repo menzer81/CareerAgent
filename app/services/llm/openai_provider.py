@@ -16,6 +16,7 @@ from openai import AsyncOpenAI
 from app.config import Settings
 from app.schemas.analysis import JobRequirements
 from app.schemas.candidate_profile import CandidateProfileData
+from app.schemas.resume import AccomplishmentEntry, GeneratedResumeContent, ResumeStrategy
 from app.schemas.scoring import (
     DimensionScore,
     FullAnalysisResult,
@@ -48,6 +49,23 @@ set of job requirements. Your task is to:
 Return valid JSON exactly matching the provided schema. Be specific and honest.
 A score of 0-100 where: 90-100=exceptional match, 70-89=strong match, 50-69=moderate/stretch,
 below 50=significant gap."""
+
+_GENERATE_CONTENT_SYSTEM_PROMPT = """You are an expert executive resume writer. You are given a
+candidate's structured profile, a job's structured requirements, a resume strategy (persona,
+themes to emphasize/deemphasize/omit), and the candidate's top selected accomplishments.
+
+Your job is to REWRITE — not invent — resume copy so it reads as tailored to this specific job:
+- Write a 2-4 sentence executive summary
+- Rewrite each work history entry's key accomplishment bullets to use stronger, more
+  results-oriented, executive-level language
+- Rewrite each selected accomplishment's description into a punchy resume bullet
+
+Rules:
+- Every fact, employer, technology, and metric must come directly from the supplied data.
+  Do not fabricate numbers, titles, employers, or accomplishments that are not present.
+- Prefer active voice and quantified impact when metrics are already present in the source data.
+- Keep bullets concise (1-2 sentences each).
+- Return valid JSON exactly matching the provided schema."""
 
 
 def _try_parse_json_object(raw_text: str) -> tuple[dict[str, Any], str]:
@@ -400,3 +418,56 @@ Recommendation tiers:
         )
         data = normalized
         return FullAnalysisResult.model_validate(data)
+
+    async def generate_resume_content(
+        self,
+        job_posting_id: int,
+        profile: CandidateProfileData,
+        requirements: JobRequirements,
+        strategy: ResumeStrategy,
+        selected_accomplishments: list[AccomplishmentEntry],
+    ) -> GeneratedResumeContent:
+        schema = GeneratedResumeContent.model_json_schema()
+        user_prompt = f"""Rewrite the resume content for this candidate/job pairing.
+Return a JSON object that strictly follows this schema:
+{json.dumps(schema, indent=2)}
+
+The job_posting_id field must be: {job_posting_id}
+
+CANDIDATE PROFILE:
+{profile.model_dump_json(indent=2)}
+
+JOB REQUIREMENTS:
+{requirements.model_dump_json(indent=2)}
+
+RESUME STRATEGY:
+{strategy.model_dump_json(indent=2)}
+
+SELECTED ACCOMPLISHMENTS:
+{json.dumps([a.model_dump() for a in selected_accomplishments], indent=2)}
+
+For experience_bullets, include one entry per company in the candidate's work_history that has
+key_accomplishments, using the same "company" name. For accomplishment_bullets, include one
+entry per selected accomplishment using its "id"."""
+
+        logger.debug("Calling LLM to generate resume content")
+        response = await self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": _GENERATE_CONTENT_SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ],
+            response_format={"type": "json_object"},
+            temperature=self._temperature(0.4),
+        )
+        data, source, parse_mode = _extract_response_json_payload(response)
+        logger.info(
+            "LLM resume content payload parsed provider=%s model=%s source=%s parse_mode=%s",
+            self.provider_name,
+            self.model,
+            source,
+            parse_mode,
+        )
+        data.setdefault("job_posting_id", job_posting_id)
+        data["generated_by"] = "llm"
+        return GeneratedResumeContent.model_validate(data)

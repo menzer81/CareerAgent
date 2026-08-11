@@ -22,6 +22,8 @@ CareerAgent analyzes job postings against your experience profile and scores how
 - **Keyword Coverage Report** — shows how many of a job's important keywords are demonstrably covered by your profile before a resume is generated
 - **Resume Quality Scoring** — scores a generated resume/strategy across keyword coverage, leadership signal strength, AI relevance, and manager-of-managers alignment
 - **Traceable Resume Data Model** — every generated resume section/bullet is grounded in `candidate_profile.json` / `accomplishments.json`; nothing is invented
+- **LLM Resume Content Generator** — when an LLM is configured, rewrites the executive summary and experience/accomplishment bullets to be tailored per job (falls back to unmodified static profile content when no LLM is configured or the call fails)
+- **Resume Validation Layer** — quality-control checks (contact info present, no corrupted characters, no duplicate bullets, required sections present, metrics not silently dropped by rewriting) run before a resume plan is returned
 
 ---
 

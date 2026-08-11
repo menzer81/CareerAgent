@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 
 from app.schemas.analysis import JobRequirements
 from app.schemas.candidate_profile import CandidateProfileData
+from app.schemas.resume import AccomplishmentEntry, GeneratedResumeContent, ResumeStrategy
 from app.schemas.scoring import FullAnalysisResult
 
 
@@ -26,4 +27,22 @@ class BaseLLMProvider(ABC):
         job_posting_id: int,
     ) -> FullAnalysisResult:
         """Score the candidate against the job requirements and produce a full analysis."""
+        ...
+
+    @abstractmethod
+    async def generate_resume_content(
+        self,
+        job_posting_id: int,
+        profile: CandidateProfileData,
+        requirements: JobRequirements,
+        strategy: ResumeStrategy,
+        selected_accomplishments: list[AccomplishmentEntry],
+    ) -> GeneratedResumeContent:
+        """Rewrite the executive summary and experience/accomplishment bullets.
+
+        The LLM should synthesize and improve wording/framing based on the
+        candidate profile, resume strategy, and selected accomplishments — it
+        must not invent facts, employers, metrics, or experience that aren't
+        already present in the supplied data.
+        """
         ...

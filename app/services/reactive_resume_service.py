@@ -122,8 +122,8 @@ class ReactiveResumeService:
             "$schema": "https://rxresu.me/schema.json",
             "version": "5.0.0",
             "picture": {
-                "hidden": True,
-                "url": "",
+                "hidden": False,
+                "url": "https://rxresu.me/api/uploads/019feca8-98cb-72bc-ae0d-fa5eb9f0d2f4/pictures/1786399572660.jpeg",
                 "size": 96,
                 "rotation": 0,
                 "aspectRatio": 1,
@@ -250,6 +250,9 @@ class ReactiveResumeService:
         }
 
     def _certification_item(self, entry: Any) -> dict[str, Any]:
+        # Reactive Resume already renders "issuer" alongside "title"; repeating the
+        # issuer in "description" produced duplicated text (e.g. "Microsoft" twice)
+        # in the rendered PDF, so leave description empty unless there's extra info.
         return {
             "id": self._id(),
             "hidden": False,
@@ -257,7 +260,7 @@ class ReactiveResumeService:
             "issuer": entry.issuer,
             "date": str(entry.year or ""),
             "website": {"url": "", "label": "", "inlineLink": False},
-            "description": self._paragraph_html(entry.issuer),
+            "description": "",
         }
 
     def _skill_item(self, skill: str) -> dict[str, Any]:
@@ -271,6 +274,27 @@ class ReactiveResumeService:
             "level": 0,
             "keywords": [],
         }
+
+    _SKILL_CATEGORY_LABELS: dict[str, str] = {
+        "cloud_and_devops": "Cloud & DevOps",
+        "ai_and_automation": "AI & Automation",
+        "engineering_leadership": "Engineering Leadership",
+        "technical_stack": "Technical Stack",
+        "languages": "Languages",
+        "frameworks": "Frameworks",
+        "databases": "Databases",
+        "cloud": "Cloud Platforms",
+        "devops": "DevOps",
+        "ai": "AI & Automation",
+        "leadership": "Leadership",
+    }
+
+    @classmethod
+    def _skill_category_label(cls, category: str) -> str:
+        key = category.lower()
+        if key in cls._SKILL_CATEGORY_LABELS:
+            return cls._SKILL_CATEGORY_LABELS[key]
+        return category.replace("_", " ").replace("and", "&").title()
 
     def _skill_items(self, profile: CandidateProfileData, plan: ResumePlan) -> list[dict[str, Any]]:
         categories = profile.technology_categories or {}
@@ -286,8 +310,8 @@ class ReactiveResumeService:
                         "hidden": False,
                         "icon": "",
                         "iconColor": "",
-                        "name": category.replace("_", " ").title(),
-                        "proficiency": "Category",
+                        "name": self._skill_category_label(category),
+                        "proficiency": "",
                         "level": 0,
                         "keywords": normalized,
                     }
@@ -327,7 +351,7 @@ class ReactiveResumeService:
                 sections["Compliance Highlights"] = content
 
         if (
-            persona in {"Technical Delivery Leader", "Growth Engineering Leader"}
+            persona in {"Technical Delivery Leader", "Growth Engineering Leader", "Director Track Candidate"}
             or "manager-of-managers" in plan.strategy.emphasize
         ):
             leadership_pool = (
@@ -343,7 +367,10 @@ class ReactiveResumeService:
             if content:
                 sections["Leadership Highlights"] = content
 
-        if "cloud enablement" in plan.strategy.emphasize or plan.strategy.persona == "Growth Engineering Leader":
+        if (
+            "cloud enablement" in plan.strategy.emphasize
+            or persona in {"Growth Engineering Leader", "Cloud Transformation Leader"}
+        ):
             cloud_pool = profile.leadership_experience.leadership_highlights + profile.career_highlights
             content = self._bullet_list_html(
                 self._top_role_specific_highlights(

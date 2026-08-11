@@ -15,6 +15,7 @@ from __future__ import annotations
 from app.schemas.candidate_profile import CandidateProfileData
 from app.schemas.resume import (
     AccomplishmentEntry,
+    GeneratedResumeContent,
     ResumeDataModel,
     ResumeDocument,
     ResumeSection,
@@ -34,8 +35,22 @@ class ResumeDocumentService:
         data_model: ResumeDataModel,
         strategy: ResumeStrategy,
         accomplishments: list[AccomplishmentEntry] | None = None,
+        generated_content: GeneratedResumeContent | None = None,
     ) -> ResumeDocument:
         sections: list[ResumeSection] = []
+
+        experience_bullets_by_company = {
+            entry.company: entry.bullets
+            for entry in (generated_content.experience_bullets if generated_content else [])
+        }
+        accomplishment_text_by_id = {
+            b.id: b.generated_text for b in (generated_content.accomplishment_bullets if generated_content else [])
+        }
+        executive_summary = (
+            generated_content.executive_summary
+            if generated_content and generated_content.executive_summary.strip()
+            else data_model.executive_summary
+        )
 
         if data_model.skills_to_highlight:
             sections.append(
@@ -57,7 +72,8 @@ class ResumeDocumentService:
             )
             date_range = f"{entry.start_date} – {entry.end_date or 'Present'}"
             heading = f"{entry.title}, {entry.company} ({date_range})"
-            bullets = list(entry.key_accomplishments[:limit])
+            source_bullets = experience_bullets_by_company.get(entry.company) or entry.key_accomplishments
+            bullets = list(source_bullets[:limit])
             sections.append(ResumeSection(heading=heading, bullets=bullets, level=3))
 
         if data_model.selected_accomplishments and accomplishments:
@@ -68,7 +84,10 @@ class ResumeDocumentService:
                 sections.append(
                     ResumeSection(
                         heading="Featured Accomplishments",
-                        bullets=[f"{acc.title}: {acc.impact}" for acc in featured],
+                        bullets=[
+                            accomplishment_text_by_id.get(acc.id, f"{acc.title}: {acc.impact}")
+                            for acc in featured
+                        ],
                     )
                 )
 
@@ -101,7 +120,7 @@ class ResumeDocumentService:
             full_name=profile.full_name,
             current_title=profile.current_title,
             location=profile.location,
-            executive_summary=data_model.executive_summary,
+            executive_summary=executive_summary,
             sections=sections,
         )
 

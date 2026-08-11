@@ -328,41 +328,16 @@
     ]
   },
   "technology_categories": {
-    "languages": [
-      "C#",
-      "JavaScript",
-      "TypeScript",
-      "SQL"
-    ],
-
-    "frameworks": [
-      ".NET",
-      "ASP.NET",
-      "Entity Framework",
-      "Bootstrap",
-      "jQuery"
-    ],
-
-    "databases": [
-      "SQL Server",
-      "PostgreSQL",
-      "MySQL",
-      "Oracle"
-    ],
-
-    "cloud": [
+    "cloud_and_devops": [
       "Azure",
-      "AWS"
-    ],
-
-    "devops": [
+      "AWS",
       "Azure DevOps",
       "Git",
       "CI/CD",
       "Docker"
     ],
 
-    "ai": [
+    "ai_and_automation": [
       "GitHub Copilot",
       "GitHub Copilot Coding Agent",
       "Azure OpenAI",
@@ -371,7 +346,7 @@
       "Playwright"
     ],
 
-    "leadership": [
+    "engineering_leadership": [
       "Engineering Management",
       "Vendor Management",
       "Budget Planning",
@@ -380,6 +355,22 @@
       "Distributed Teams",
       "Technical Training",
       "Compliance Management"
+    ],
+
+    "technical_stack": [
+      "C#",
+      ".NET",
+      "ASP.NET",
+      "Entity Framework",
+      "JavaScript",
+      "TypeScript",
+      "SQL",
+      "SQL Server",
+      "PostgreSQL",
+      "MySQL",
+      "Oracle",
+      "Bootstrap",
+      "jQuery"
     ]
   },
   "technologies": [
@@ -460,7 +451,7 @@
   ],
   "certifications": [
     {
-      "name": "Microsoft AZ-900: Microsoft Azure Fundamentals",
+      "name": "AZ-900: Microsoft Azure Fundamentals",
       "issuer": "Microsoft",
       "year": 2026,
       "is_active": true

@@ -4,11 +4,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_llm_provider
 from app.core.exceptions import AnalysisNotFoundError, NotFoundError
 from app.database import get_db
 from app.schemas.candidate_profile import CandidateProfileData
 from app.schemas.resume import ExportPreferences, ResumeBuildRequest, ResumePlan
 from app.services.achievement_selection_service import DEFAULT_BOOST_MULTIPLIER, DEFAULT_TOP_N
+from app.services.llm.base import BaseLLMProvider
 from app.services.resume_export_service import ResumeExportService
 from app.services.resume_service import ResumeService
 
@@ -20,6 +22,7 @@ async def build_resume_plan(
     job_id: int,
     payload: ResumeBuildRequest,
     db: AsyncSession = Depends(get_db),
+    llm: BaseLLMProvider | None = Depends(get_llm_provider),
 ) -> ResumePlan:
     """Run the achievement selection + resume strategy + generation pipeline.
 
@@ -27,7 +30,7 @@ async def build_resume_plan(
     analyzed (``POST /api/v1/analysis/{job_id}`` or ``/extract``).
     """
     try:
-        service = ResumeService(db)
+        service = ResumeService(db, llm)
         return await service.build_plan(
             job_id,
             boosted_accomplishment_ids=payload.boosted_accomplishment_ids or None,

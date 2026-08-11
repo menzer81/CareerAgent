@@ -29,6 +29,13 @@ class AccomplishmentEntry(BaseModel):
     impact: str = ""
     scope: dict[str, int] = Field(default_factory=dict)
     metrics: dict[str, float] = Field(default_factory=dict)
+    importance: int = Field(
+        5,
+        ge=0,
+        le=10,
+        description="Inherent value of this accomplishment independent of job relevance "
+        "(10 = signature accomplishment, 8 = strong, 5 = good, 3 = supporting).",
+    )
 
 
 class ResumePersona(str, Enum):
@@ -39,6 +46,8 @@ class ResumePersona(str, Enum):
     COMPLIANCE_GOVERNANCE_LEADER = "Compliance & Governance Leader"
     TECHNICAL_DELIVERY_LEADER = "Technical Delivery Leader"
     GROWTH_ENGINEERING_LEADER = "Growth Engineering Leader"
+    CLOUD_TRANSFORMATION_LEADER = "Cloud Transformation Leader"
+    DIRECTOR_TRACK_CANDIDATE = "Director Track Candidate"
 
 
 class AccomplishmentRanking(BaseModel):
@@ -151,6 +160,52 @@ class ResumeQualityScore(BaseModel):
     overall_resume_quality: float = Field(..., ge=0, le=100)
 
 
+class GeneratedAccomplishmentBullet(BaseModel):
+    """LLM-rewritten copy for a single accomplishment (Recommendation: OpenAI Resume Generator)."""
+
+    id: str
+    generated_text: str
+
+
+class GeneratedWorkHistoryBullets(BaseModel):
+    """LLM-rewritten experience bullets for a single work history entry."""
+
+    company: str
+    bullets: list[str] = Field(default_factory=list)
+
+
+class GeneratedResumeContent(BaseModel):
+    """Tailored resume prose produced by an LLM content generator.
+
+    All content here must be traceable to the candidate profile / accomplishment
+    bank the LLM was given — it is expected to *rewrite* wording and framing,
+    not invent new facts, metrics, or experience.
+    """
+
+    job_posting_id: int
+    executive_summary: str = ""
+    experience_bullets: list[GeneratedWorkHistoryBullets] = Field(default_factory=list)
+    accomplishment_bullets: list[GeneratedAccomplishmentBullet] = Field(default_factory=list)
+    generated_by: str = "static"
+    """Provenance marker: "llm" when produced by an LLM provider, "static" when
+    falling back to the unmodified profile/accomplishment text."""
+
+
+class ResumeValidationIssue(BaseModel):
+    """A single validation finding produced by the Resume Validation Layer."""
+
+    check: str
+    severity: str = Field("error", description="'error' or 'warning'")
+    message: str
+
+
+class ResumeValidationResult(BaseModel):
+    """Recommendation: Validation Layer — quality/safety gate before rendering."""
+
+    passed: bool
+    issues: list[ResumeValidationIssue] = Field(default_factory=list)
+
+
 class ExportPreferences(BaseModel):
     """Rendering preferences for downstream resume exporters."""
 
@@ -186,4 +241,6 @@ class ResumePlan(BaseModel):
     quality_score: ResumeQualityScore
     export_preferences: ExportPreferences = Field(default_factory=ExportPreferences)
     export_capabilities: ExportCapabilities = Field(default_factory=ExportCapabilities)
+    generated_content: GeneratedResumeContent | None = None
+    validation: ResumeValidationResult | None = None
     markdown: str = ""

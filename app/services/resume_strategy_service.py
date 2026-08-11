@@ -42,6 +42,16 @@ _PERSONA_THEMES: dict[ResumePersona, list[str]] = {
         "Organizational Growth",
         "Engineering Enablement",
     ],
+    ResumePersona.CLOUD_TRANSFORMATION_LEADER: [
+        "Cloud Migration",
+        "Cloud Enablement",
+        "Infrastructure Modernization",
+    ],
+    ResumePersona.DIRECTOR_TRACK_CANDIDATE: [
+        "Manager of Managers",
+        "Organizational Leadership",
+        "Executive Stakeholder Management",
+    ],
 }
 
 _LOW_RELEVANCE_THRESHOLD = 50.0
@@ -70,6 +80,14 @@ def select_persona(requirements: JobRequirements) -> ResumePersona:
 
     if any(w in text for w in ("hypergrowth", "scale", "scaling", "growth stage", "rapid growth")):
         return ResumePersona.GROWTH_ENGINEERING_LEADER
+
+    if requirements.director_level_or_above or requirements.manager_of_managers_required:
+        return ResumePersona.DIRECTOR_TRACK_CANDIDATE
+
+    if requirements.cloud_requirements or any(
+        w in kw for kw in keywords + industries for w in ("cloud", "aws", "azure", "migration")
+    ):
+        return ResumePersona.CLOUD_TRANSFORMATION_LEADER
 
     return ResumePersona.TECHNICAL_DELIVERY_LEADER
 
