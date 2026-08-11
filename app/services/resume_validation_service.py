@@ -6,6 +6,8 @@ document before it is rendered/exported:
 - Contact information exists
 - Metrics are preserved (numbers present in source accomplishments aren't
   dropped by content generation)
+- No fabricated metrics (numbers in generated bullets that don't appear in
+  any source data for that accomplishment are flagged as potential hallucinations)
 - No duplicate accomplishments
 - No corrupted characters
 - Required sections are present
@@ -27,8 +29,25 @@ from app.schemas.resume import (
 )
 
 _METRIC_PATTERN = re.compile(r"\d")
+# Matches all standalone numeric tokens: integers, decimals, and percentages
+_NUMBER_PATTERN = re.compile(r"\d+(?:[.,]\d+)?")
 _CORRUPTED_CHAR_PATTERN = re.compile(r"[\ufffd\x00-\x08\x0b\x0c\x0e-\x1f]")
 _REQUIRED_SECTION_HEADINGS = {"professional experience", "core skills"}
+
+
+def _extract_numbers(text: str) -> set[str]:
+    """Return all digit sequences found in text, normalised (commas stripped)."""
+    return {m.replace(",", "") for m in _NUMBER_PATTERN.findall(text)}
+
+
+def _source_numbers_for_accomplishment(acc: AccomplishmentEntry) -> set[str]:
+    """Collect every number legitimately associated with this accomplishment."""
+    numbers: set[str] = set()
+    for text in [acc.title, acc.impact]:
+        numbers |= _extract_numbers(text)
+    for value in acc.metrics.values():
+        numbers |= _extract_numbers(str(value))
+    return numbers
 
 
 class ResumeValidationService:
@@ -50,6 +69,7 @@ class ResumeValidationService:
         issues.extend(self._check_formatting(document))
         if generated_content is not None and selected_accomplishments:
             issues.extend(self._check_metrics_preserved(generated_content, selected_accomplishments))
+            issues.extend(self._check_no_fabricated_metrics(generated_content, selected_accomplishments))
 
         passed = not any(issue.severity == "error" for issue in issues)
         return ResumeValidationResult(passed=passed, issues=issues)
@@ -166,6 +186,46 @@ class ResumeValidationService:
                         message=(
                             f"Accomplishment '{acc.id}' has source metrics but the generated "
                             "bullet contains no numbers; metrics may have been dropped."
+                        ),
+                    )
+                )
+        return issues
+
+    def _check_no_fabricated_metrics(
+        self,
+        generated_content: GeneratedResumeContent,
+        selected_accomplishments: list[AccomplishmentEntry],
+    ) -> list[ResumeValidationIssue]:
+        """Flag numbers in generated bullets that have no basis in source data.
+
+        Any numeric token in an LLM-generated accomplishment bullet that does not
+        appear anywhere in the accomplishment's own title, impact, or metrics is
+        treated as a potential hallucination and reported as an error.
+        """
+        issues: list[ResumeValidationIssue] = []
+        if generated_content.generated_by != "llm":
+            return issues
+
+        generated_by_id = {b.id: b.generated_text for b in generated_content.accomplishment_bullets}
+        for acc in selected_accomplishments:
+            generated_text = generated_by_id.get(acc.id)
+            if not generated_text:
+                continue
+            generated_numbers = _extract_numbers(generated_text)
+            if not generated_numbers:
+                continue
+            source_numbers = _source_numbers_for_accomplishment(acc)
+            fabricated = generated_numbers - source_numbers
+            if fabricated:
+                issues.append(
+                    ResumeValidationIssue(
+                        check="fabricated_metrics",
+                        severity="error",
+                        message=(
+                            f"Accomplishment '{acc.id}': generated bullet contains number(s) "
+                            f"{sorted(fabricated)} not found in source data. "
+                            f"Source numbers: {sorted(source_numbers) or 'none'}. "
+                            f"Generated: {generated_text!r}"
                         ),
                     )
                 )

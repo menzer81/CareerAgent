@@ -78,12 +78,34 @@ class ReactiveResumeService:
         return f"HTTP {response.status_code}"
 
     def _build_resume_data(self, profile: CandidateProfileData, plan: ResumePlan) -> dict[str, Any]:
+        gc = plan.generated_content  # may be None when no LLM is configured
+
+        # Index LLM-generated content for fast lookup
+        generated_bullets_by_company: dict[str, list[str]] = {}
+        generated_text_by_acc_id: dict[str, str] = {}
+        if gc:
+            for entry in gc.experience_bullets:
+                generated_bullets_by_company[entry.company] = entry.bullets
+            for bullet in gc.accomplishment_bullets:
+                generated_text_by_acc_id[bullet.id] = bullet.generated_text
+
+        # Resolve executive summary: LLM > data_model > profile
+        executive_summary = (
+            gc.executive_summary.strip()
+            if gc and gc.executive_summary.strip()
+            else plan.data_model.executive_summary.strip() or profile.summary
+        )
+
         selected_companies = set(plan.data_model.selected_work_history)
         shortened_companies = set(plan.data_model.roles_to_shorten)
         work_entries = [entry for entry in profile.work_history if entry.company in selected_companies]
 
         experience_items = [
-            self._experience_item(entry, shortened=entry.company in shortened_companies)
+            self._experience_item(
+                entry,
+                shortened=entry.company in shortened_companies,
+                generated_bullets=generated_bullets_by_company.get(entry.company),
+            )
             for entry in work_entries
         ]
         education_items = [self._education_item(entry) for entry in profile.education]
@@ -92,7 +114,7 @@ class ReactiveResumeService:
         ]
         skill_items = self._skill_items(profile, plan)
 
-        featured_accomplishments = self._featured_accomplishments_html(plan)
+        featured_accomplishments = self._featured_accomplishments_html(plan, generated_text_by_acc_id)
 
         custom_sections = []
         custom_main_sections: list[str] = []
@@ -145,8 +167,8 @@ class ReactiveResumeService:
             "summary": {
                 "title": "Professional Summary",
                 "columns": 1,
-                "hidden": not bool(plan.data_model.executive_summary),
-                "content": self._paragraph_html(plan.data_model.executive_summary),
+                "hidden": not bool(executive_summary),
+                "content": self._paragraph_html(executive_summary),
             },
             "sections": {
                 "profiles": self._empty_section("Profiles", hidden=True),
@@ -214,9 +236,17 @@ class ReactiveResumeService:
             },
         }
 
-    def _experience_item(self, entry: WorkHistoryEntry, *, shortened: bool) -> dict[str, Any]:
+    def _experience_item(
+        self,
+        entry: WorkHistoryEntry,
+        *,
+        shortened: bool,
+        generated_bullets: list[str] | None = None,
+    ) -> dict[str, Any]:
         limit = _SHORTENED_BULLET_LIMIT if shortened else _FULL_BULLET_LIMIT
-        accomplishments = entry.key_accomplishments[:limit]
+        # Prefer LLM-generated bullets; fall back to raw profile key_accomplishments
+        source_bullets = generated_bullets if generated_bullets else entry.key_accomplishments
+        accomplishments = source_bullets[:limit]
         description = self._bullet_list_html(accomplishments) or self._paragraph_html(entry.description)
         date_range = f"{entry.start_date} - {entry.end_date or 'Present'}"
         return {
@@ -439,13 +469,19 @@ class ReactiveResumeService:
             "label": url.replace("https://", "").replace("http://", ""),
         }
 
-    def _featured_accomplishments_html(self, plan: ResumePlan) -> str:
+    def _featured_accomplishments_html(
+        self, plan: ResumePlan, generated_text_by_acc_id: dict[str, str] | None = None
+    ) -> str:
         selected = plan.selection.selected_accomplishment_ids
         if not selected:
             return ""
         accomplishments = {entry.id: entry for entry in load_accomplishments()}
         items = []
         for accomplishment_id in selected:
+            # Prefer LLM-generated text; fall back to raw accomplishment title/impact
+            if generated_text_by_acc_id and accomplishment_id in generated_text_by_acc_id:
+                items.append(generated_text_by_acc_id[accomplishment_id])
+                continue
             accomplishment = accomplishments.get(accomplishment_id)
             if accomplishment is None:
                 label = accomplishment_id

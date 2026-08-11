@@ -50,19 +50,32 @@ Return valid JSON exactly matching the provided schema. Be specific and honest.
 A score of 0-100 where: 90-100=exceptional match, 70-89=strong match, 50-69=moderate/stretch,
 below 50=significant gap."""
 
-_GENERATE_CONTENT_SYSTEM_PROMPT = """You are an expert executive resume writer. You are given a
-candidate's structured profile, a job's structured requirements, a resume strategy (persona,
-themes to emphasize/deemphasize/omit), and the candidate's top selected accomplishments.
+_GENERATE_CONTENT_SYSTEM_PROMPT = """You are an expert executive resume writer specializing in tailoring resumes to specific job postings.
+You are given a candidate's structured profile, a job's structured requirements, a resume strategy
+(persona, themes to emphasize/deemphasize/omit), and the candidate's top selected accomplishments.
 
-Your job is to REWRITE — not invent — resume copy so it reads as tailored to this specific job:
-- Write a 2-4 sentence executive summary
-- Rewrite each work history entry's key accomplishment bullets to use stronger, more
-  results-oriented, executive-level language
-- Rewrite each selected accomplishment's description into a punchy resume bullet
+Your job is to REWRITE resume copy so it is CLEARLY AND SPECIFICALLY tailored to THIS job:
 
-Rules:
+EXECUTIVE SUMMARY rules:
+- Write 2-4 sentences targeted at this specific job — mention the role type, key skills from the
+  job requirements, and the candidate's most relevant experience. Do NOT write a generic summary.
+- Mirror the language and priorities from the job's requirements and important_keywords.
+- The summary should read differently for a compliance role vs an AI role vs a cloud role.
+
+EXPERIENCE BULLETS rules:
+- Reorder bullets within each role to lead with the accomplishments most relevant to THIS job.
+- Reframe language to echo the job's terminology (e.g. if job says "platform engineering", use
+  that phrase where it fits; if job emphasizes "cost reduction", lead with cost-related bullets).
+- Keep facts, employers, and metrics unchanged — only reframe emphasis and word choice.
+- Omit or shorten bullets for the themes listed in the strategy's "omit" and "deemphasize" lists.
+
+ACCOMPLISHMENT BULLETS rules:
+- Rewrite each accomplishment bullet to call out the specific dimension this job cares about.
+  (e.g. if job is AI-focused, frame compliance automation as "AI-driven compliance automation").
+- Keep every fact and metric exactly as supplied — never fabricate numbers or employers.
+
+Rules for all content:
 - Every fact, employer, technology, and metric must come directly from the supplied data.
-  Do not fabricate numbers, titles, employers, or accomplishments that are not present.
 - Prefer active voice and quantified impact when metrics are already present in the source data.
 - Keep bullets concise (1-2 sentences each).
 - Return valid JSON exactly matching the provided schema."""
@@ -308,6 +321,58 @@ def _bump_llm_path(stage: str, mode: str) -> None:
         _LLM_PATH_STATS[stage][mode] += 1
 
 
+def _normalize_generated_resume_content(
+    data: dict[str, Any],
+    selected_accomplishments: list,
+) -> dict[str, Any]:
+    """Repair common LLM schema drift in GeneratedResumeContent payloads.
+
+    Some local models (e.g. Qwen) return accomplishment_bullets items with a
+    ``title`` key (mirroring the AccomplishmentEntry input) instead of the
+    required ``id`` + ``generated_text`` fields.  This adapter fixes that in
+    place so validation doesn't fail needlessly.
+    """
+    acc_id_by_title: dict[str, str] = {a.title: a.id for a in selected_accomplishments}
+
+    raw_bullets = data.get("accomplishment_bullets")
+    if not isinstance(raw_bullets, list):
+        return data
+
+    fixed: list[dict[str, Any]] = []
+    for item in raw_bullets:
+        if not isinstance(item, dict):
+            fixed.append(item)
+            continue
+        if "id" in item and "generated_text" in item:
+            fixed.append(item)
+            continue
+        # Try to recover id from title field
+        title = item.get("title", "")
+        recovered_id = acc_id_by_title.get(title, "")
+        if not recovered_id and ":" in title:
+            # Qwen sometimes prefixes "JJK-003: ..." — the part before ":" is the id
+            candidate = title.split(":")[0].strip()
+            if any(a.id == candidate for a in selected_accomplishments):
+                recovered_id = candidate
+        generated_text = (
+            item.get("generated_text")
+            or item.get("description")
+            or item.get("impact")
+            or item.get("content")
+            or title
+        )
+        fixed.append({"id": recovered_id or title, "generated_text": generated_text})
+        if recovered_id:
+            logger.debug("Normalized accomplishment_bullet title=%r → id=%r", title, recovered_id)
+        else:
+            logger.warning(
+                "Could not resolve accomplishment id for bullet title=%r; using title as id", title
+            )
+
+    data["accomplishment_bullets"] = fixed
+    return data
+
+
 class OpenAIProvider(BaseLLMProvider):
     def __init__(
         self,
@@ -428,11 +493,31 @@ Recommendation tiers:
         selected_accomplishments: list[AccomplishmentEntry],
     ) -> GeneratedResumeContent:
         schema = GeneratedResumeContent.model_json_schema()
+        # Build a concise job-signal summary to prime the model before the full data dump
+        top_keywords = ", ".join(requirements.important_keywords[:10]) if requirements.important_keywords else "none"
+        top_ai_reqs = ", ".join(requirements.ai_requirements[:5]) if requirements.ai_requirements else "none"
+        top_cloud_reqs = ", ".join(requirements.cloud_requirements[:5]) if requirements.cloud_requirements else "none"
+        role_summary_line = requirements.role_summary or "Not specified"
+
         user_prompt = f"""Rewrite the resume content for this candidate/job pairing.
 Return a JSON object that strictly follows this schema:
 {json.dumps(schema, indent=2)}
 
 The job_posting_id field must be: {job_posting_id}
+
+=== JOB SIGNAL SUMMARY (use these to drive tailoring) ===
+Role summary: {role_summary_line}
+Persona to present: {strategy.persona}
+Key themes to emphasize: {", ".join(strategy.key_themes)}
+Skills/areas to emphasize: {", ".join(strategy.emphasize) if strategy.emphasize else "none"}
+Content to deemphasize: {", ".join(strategy.deemphasize) if strategy.deemphasize else "none"}
+Content to omit: {", ".join(strategy.omit[:3]) if strategy.omit else "none"}
+Top job keywords: {top_keywords}
+AI requirements: {top_ai_reqs}
+Cloud requirements: {top_cloud_reqs}
+Director/MoM required: {requirements.director_level_or_above or requirements.manager_of_managers_required}
+
+=== FULL DATA ===
 
 CANDIDATE PROFILE:
 {profile.model_dump_json(indent=2)}
@@ -446,9 +531,15 @@ RESUME STRATEGY:
 SELECTED ACCOMPLISHMENTS:
 {json.dumps([a.model_dump() for a in selected_accomplishments], indent=2)}
 
-For experience_bullets, include one entry per company in the candidate's work_history that has
-key_accomplishments, using the same "company" name. For accomplishment_bullets, include one
-entry per selected accomplishment using its "id"."""
+CRITICAL field-name rules (do NOT deviate):
+- For experience_bullets: each item must have "company" (string) and "bullets" (list of strings).
+  Include one entry per company in the candidate's work_history that has key_accomplishments.
+  Use the exact "company" name from work_history.
+- For accomplishment_bullets: each item must have exactly two fields:
+    "id": the accomplishment's original id value (e.g. "JJK-003") — copy it exactly
+    "generated_text": your rewritten bullet text as a single string
+  Include one entry per selected accomplishment. Do NOT use "title", "description",
+  "impact", or any other key — only "id" and "generated_text"."""
 
         logger.debug("Calling LLM to generate resume content")
         response = await self.client.chat.completions.create(
@@ -470,4 +561,5 @@ entry per selected accomplishment using its "id"."""
         )
         data.setdefault("job_posting_id", job_posting_id)
         data["generated_by"] = "llm"
+        data = _normalize_generated_resume_content(data, selected_accomplishments)
         return GeneratedResumeContent.model_validate(data)

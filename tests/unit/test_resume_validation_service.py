@@ -152,6 +152,68 @@ class TestResumeValidationService:
         )
         assert result.passed
 
+    def test_fabricated_metric_is_flagged_as_error(self):
+        service = ResumeValidationService()
+        accomplishment = AccomplishmentEntry(
+            id="acc-1",
+            title="AWS Enablement",
+            company="Entrata",
+            category="Leadership",
+            impact="Trained 500 engineers with 98% completion rate.",
+            metrics={"engineers_trained": 500, "completion_rate_percent": 98},
+        )
+        generated_content = GeneratedResumeContent(
+            job_posting_id=1,
+            executive_summary="Summary",
+            accomplishment_bullets=[
+                GeneratedAccomplishmentBullet(
+                    id="acc-1",
+                    # 150000 is fabricated — not in source data
+                    generated_text="Scaled SaaS platform to 150000+ units by training 500 engineers, achieving 98% completion.",
+                )
+            ],
+            generated_by="llm",
+        )
+        result = service.validate(
+            _profile(),
+            _document(),
+            generated_content=generated_content,
+            selected_accomplishments=[accomplishment],
+        )
+        assert not result.passed
+        fabricated_issues = [i for i in result.issues if i.check == "fabricated_metrics"]
+        assert fabricated_issues
+        assert "150000" in fabricated_issues[0].message
+
+    def test_no_fabrication_when_numbers_match_source(self):
+        service = ResumeValidationService()
+        accomplishment = AccomplishmentEntry(
+            id="acc-1",
+            title="AWS Enablement",
+            company="Entrata",
+            category="Leadership",
+            impact="Trained 500 engineers with 98% completion rate.",
+            metrics={"engineers_trained": 500, "completion_rate_percent": 98},
+        )
+        generated_content = GeneratedResumeContent(
+            job_posting_id=1,
+            executive_summary="Summary",
+            accomplishment_bullets=[
+                GeneratedAccomplishmentBullet(
+                    id="acc-1",
+                    generated_text="Led AWS training program for 500 engineers across US and India, achieving 98% completion.",
+                )
+            ],
+            generated_by="llm",
+        )
+        result = service.validate(
+            _profile(),
+            _document(),
+            generated_content=generated_content,
+            selected_accomplishments=[accomplishment],
+        )
+        assert not any(i.check == "fabricated_metrics" for i in result.issues)
+
     def test_static_generated_content_skips_metrics_check(self):
         service = ResumeValidationService()
         accomplishment = AccomplishmentEntry(

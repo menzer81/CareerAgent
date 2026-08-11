@@ -85,3 +85,37 @@ class TestResumeContentGenerationService:
 
         assert result.generated_by == "static"
         assert result.executive_summary == profile.summary
+
+    @pytest.mark.asyncio
+    async def test_fabricated_metrics_scrubbed_to_static(self, profile, strategy):
+        """Bullets with hallucinated numbers are replaced by safe static text."""
+        acc = AccomplishmentEntry(
+            id="acc-1",
+            title="AWS Enablement",
+            company="Entrata",
+            category="Leadership",
+            impact="Trained 500 engineers with 98% completion.",
+            metrics={"engineers_trained": 500, "completion_rate_percent": 98},
+        )
+
+        class HallucinatingLLM:
+            async def generate_resume_content(self, job_posting_id, profile, requirements, strategy, selected):
+                return GeneratedResumeContent(
+                    job_posting_id=job_posting_id,
+                    executive_summary="Tailored summary.",
+                    accomplishment_bullets=[
+                        # 150000 is fabricated
+                        GeneratedAccomplishmentBullet(
+                            id="acc-1",
+                            generated_text="Scaled platform to 150000 units and trained 500 engineers.",
+                        )
+                    ],
+                    generated_by="llm",
+                )
+
+        service = ResumeContentGenerationService(llm=HallucinatingLLM())
+        result = await service.generate(1, profile, JobRequirements(), strategy, [acc])
+
+        bullet = result.accomplishment_bullets[0]
+        assert "150000" not in bullet.generated_text
+        assert "AWS Enablement" in bullet.generated_text or "500" in bullet.generated_text

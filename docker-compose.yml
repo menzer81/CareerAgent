@@ -6,11 +6,21 @@ services:
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.openai.com/v1}
-      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - LLM_ROUTING_MODE=${LLM_ROUTING_MODE:-single}
+      - LOCAL_OPENAI_API_KEY=${LOCAL_OPENAI_API_KEY:-}
+      - LOCAL_OPENAI_BASE_URL=${LOCAL_OPENAI_BASE_URL:-}
+      - LOCAL_OPENAI_MODEL=${LOCAL_OPENAI_MODEL:-}
+      - CLOUD_OPENAI_API_KEY=${CLOUD_OPENAI_API_KEY:-}
+      - CLOUD_OPENAI_BASE_URL=${CLOUD_OPENAI_BASE_URL:-https://api.openai.com/v1}
+      - CLOUD_OPENAI_MODEL=${CLOUD_OPENAI_MODEL:-gpt-4o-mini}
       - DATABASE_URL=sqlite+aiosqlite:////data/career_agent.db
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - DEBUG=${DEBUG:-false}
       - REPORTS_DIR=/data/reports
+      - REACTIVE_RESUME_API_KEY=${REACTIVE_RESUME_API_KEY:-}
+      - REACTIVE_RESUME_BASE_URL=${REACTIVE_RESUME_BASE_URL:-https://rxresu.me/api/openapi}
+      - REACTIVE_RESUME_PAGE_FORMAT=${REACTIVE_RESUME_PAGE_FORMAT:-letter}
     volumes:
       - career_agent_data:/data
     restart: unless-stopped
