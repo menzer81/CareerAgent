@@ -202,8 +202,8 @@ class ReactiveResumeService:
                 "page": {
                     "gapX": 16,
                     "gapY": 10,
-                    "marginX": 18,
-                    "marginY": 16,
+                    "marginX": 25,
+                    "marginY": 25,
                     "format": plan.export_preferences.reactive_resume_page_format,
                     "locale": "en-US",
                     "hideIcons": False,

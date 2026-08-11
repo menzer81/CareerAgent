@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_llm_provider
+from app.api.deps import get_resume_llm_provider
 from app.core.exceptions import AnalysisNotFoundError, NotFoundError
 from app.database import get_db
 from app.schemas.candidate_profile import CandidateProfileData
@@ -22,7 +22,7 @@ async def build_resume_plan(
     job_id: int,
     payload: ResumeBuildRequest,
     db: AsyncSession = Depends(get_db),
-    llm: BaseLLMProvider | None = Depends(get_llm_provider),
+    llm: BaseLLMProvider | None = Depends(get_resume_llm_provider),
 ) -> ResumePlan:
     """Run the achievement selection + resume strategy + generation pipeline.
 

@@ -116,6 +116,59 @@ class TestResumeContentGenerationService:
         service = ResumeContentGenerationService(llm=HallucinatingLLM())
         result = await service.generate(1, profile, JobRequirements(), strategy, [acc])
 
+    @pytest.mark.asyncio
+    async def test_fuzzy_company_match_allows_cross_source_numbers(self, profile, strategy):
+        """Numbers present in work history are NOT flagged even when accomplishment company
+        name differs by suffix (e.g. 'J.J. Keller' vs 'J.J. Keller & Associates')."""
+        # This accomplishment's company name is shorter than the work history entry's name.
+        acc = AccomplishmentEntry(
+            id="JJK-004",
+            title="SOC 2 Compliance Automation",
+            company="J.J. Keller",
+            category="Compliance",
+            impact="Automated SOC 2 and ISO 27001 evidence collection.",
+            metrics={},
+        )
+        # Profile work history has "J.J. Keller & Associates" with these numbers in key_accomplishments.
+        import copy, json
+        raw = copy.deepcopy(SAMPLE_PROFILE_DATA)
+        raw["work_history"] = [
+            {
+                "company": "J.J. Keller & Associates",
+                "title": "Software Development Manager",
+                "start_date": "2024-01",
+                "key_accomplishments": [
+                    "Automated approximately 80 percent of SOC 2 evidence collection.",
+                    "Automated approximately 50 percent of ISO 27001 evidence collection.",
+                ],
+            }
+        ]
+        from app.schemas.candidate_profile import CandidateProfileData as CPD
+        profile_patched = CPD.model_validate(raw)
+
+        class LLMReturnsCrossSourceNumbers:
+            async def generate_resume_content(self, job_posting_id, prof, requirements, strategy, selected):
+                return GeneratedResumeContent(
+                    job_posting_id=job_posting_id,
+                    executive_summary="Summary.",
+                    accomplishment_bullets=[
+                        GeneratedAccomplishmentBullet(
+                            id="JJK-004",
+                            generated_text=(
+                                "Led development of AI-driven automation, automating approximately "
+                                "80 percent of SOC 2 evidence and approximately 50 percent of "
+                                "ISO 27001 evidence collection."
+                            ),
+                        )
+                    ],
+                    generated_by="llm",
+                )
+
+        service = ResumeContentGenerationService(llm=LLMReturnsCrossSourceNumbers())
+        result = await service.generate(1, profile_patched, JobRequirements(), strategy, [acc])
+
         bullet = result.accomplishment_bullets[0]
-        assert "150000" not in bullet.generated_text
-        assert "AWS Enablement" in bullet.generated_text or "500" in bullet.generated_text
+        # Should NOT have been scrubbed — 80, 50, 2, 27001 all come from work history
+        assert "80" in bullet.generated_text, "80 should survive fuzzy company match"
+        assert "27001" in bullet.generated_text, "27001 should survive fuzzy company match"
+

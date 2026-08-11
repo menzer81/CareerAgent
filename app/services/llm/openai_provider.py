@@ -9,6 +9,7 @@ Uses the openai SDK with a configurable base_url — works with:
 
 import json
 import logging
+import re
 from typing import Any
 
 from openai import AsyncOpenAI
@@ -54,6 +55,13 @@ _GENERATE_CONTENT_SYSTEM_PROMPT = """You are an expert executive resume writer s
 You are given a candidate's structured profile, a job's structured requirements, a resume strategy
 (persona, themes to emphasize/deemphasize/omit), and the candidate's top selected accomplishments.
 
+⚠️  ABSOLUTE RULE — NO INVENTED NUMBERS OR STATISTICS ⚠️
+Every percentage, count, dollar amount, or any other number that appears in your output MUST
+come verbatim from the supplied candidate data (profile, work history, accomplishments).
+Do NOT invent, estimate, round, or extrapolate any metric that is not explicitly present in the
+input data. If no number exists for a claim, write the claim without any number.
+Violation of this rule makes the resume legally and professionally harmful to the candidate.
+
 Your job is to REWRITE resume copy so it is CLEARLY AND SPECIFICALLY tailored to THIS job:
 
 EXECUTIVE SUMMARY rules:
@@ -68,14 +76,16 @@ EXPERIENCE BULLETS rules:
   that phrase where it fits; if job emphasizes "cost reduction", lead with cost-related bullets).
 - Keep facts, employers, and metrics unchanged — only reframe emphasis and word choice.
 - Omit or shorten bullets for the themes listed in the strategy's "omit" and "deemphasize" lists.
+- Only use numbers that appear in the source key_accomplishments text for that role.
 
 ACCOMPLISHMENT BULLETS rules:
 - Rewrite each accomplishment bullet to call out the specific dimension this job cares about.
   (e.g. if job is AI-focused, frame compliance automation as "AI-driven compliance automation").
-- Keep every fact and metric exactly as supplied — never fabricate numbers or employers.
+- Only use the exact numbers present in the accomplishment's impact and metrics fields.
 
 Rules for all content:
 - Every fact, employer, technology, and metric must come directly from the supplied data.
+- Never fabricate numbers, percentages, team sizes, or statistics not present in the input.
 - Prefer active voice and quantified impact when metrics are already present in the source data.
 - Keep bullets concise (1-2 sentences each).
 - Return valid JSON exactly matching the provided schema."""
@@ -499,6 +509,24 @@ Recommendation tiers:
         top_cloud_reqs = ", ".join(requirements.cloud_requirements[:5]) if requirements.cloud_requirements else "none"
         role_summary_line = requirements.role_summary or "Not specified"
 
+        # Build an explicit inventory of permitted numbers per role so the model
+        # cannot claim it was "inferring" — if it's not in this list, it's fabricated.
+        permitted_numbers_by_company: dict[str, set[str]] = {}
+        for entry in profile.work_history:
+            nums: set[str] = set()
+            for text in entry.key_accomplishments:
+                nums |= {m.replace(",", "") for m in re.findall(r"\d+(?:[.,]\d+)?", text)}
+            for field in (entry.team_size, entry.direct_reports, entry.largest_org_influence):
+                if field is not None:
+                    nums.add(str(field))
+            permitted_numbers_by_company[entry.company] = nums
+
+        permitted_numbers_lines = "\n".join(
+            f"  {company}: {sorted(nums) if nums else ['none — do not use any numbers']}"
+            for company, nums in permitted_numbers_by_company.items()
+            if company in {e.company for e in profile.work_history}
+        )
+
         user_prompt = f"""Rewrite the resume content for this candidate/job pairing.
 Return a JSON object that strictly follows this schema:
 {json.dumps(schema, indent=2)}
@@ -517,6 +545,9 @@ AI requirements: {top_ai_reqs}
 Cloud requirements: {top_cloud_reqs}
 Director/MoM required: {requirements.director_level_or_above or requirements.manager_of_managers_required}
 
+=== PERMITTED NUMBERS PER ROLE (EXHAUSTIVE — use ONLY these numbers in experience_bullets) ===
+{permitted_numbers_lines}
+
 === FULL DATA ===
 
 CANDIDATE PROFILE:
@@ -531,7 +562,10 @@ RESUME STRATEGY:
 SELECTED ACCOMPLISHMENTS:
 {json.dumps([a.model_dump() for a in selected_accomplishments], indent=2)}
 
-CRITICAL field-name rules (do NOT deviate):
+CRITICAL rules (do NOT deviate):
+- ⚠️  NUMBERS: You may ONLY use numbers listed in "PERMITTED NUMBERS PER ROLE" above for
+  experience_bullets, and numbers from each accomplishment's impact/metrics for
+  accomplishment_bullets. Any other number is fabricated and must NOT appear.
 - For experience_bullets: each item must have "company" (string) and "bullets" (list of strings).
   Include one entry per company in the candidate's work_history that has key_accomplishments.
   Use the exact "company" name from work_history.

@@ -13,7 +13,7 @@ from app.services.llm.openai_provider import OpenAIProvider
 
 
 def get_llm_provider(settings: Settings = Depends(get_settings)) -> BaseLLMProvider | None:
-    """Return configured LLM provider(s), or None for rule-based fallback.
+    """Return configured LLM provider(s) for job analysis and scoring.
 
     Modes:
     - single: backward-compatible behavior (legacy OPENAI_* or one explicit local/cloud target)
@@ -69,3 +69,28 @@ def get_llm_provider(settings: Settings = Depends(get_settings)) -> BaseLLMProvi
     if len(providers) == 1:
         return providers[0]
     return FallbackLLMProvider(providers)
+
+
+def get_resume_llm_provider(settings: Settings = Depends(get_settings)) -> BaseLLMProvider | None:
+    """Return the cloud LLM provider exclusively for resume content generation.
+
+    Resume writing always uses OpenAI directly — never the local Qwen model —
+    to ensure consistent, high-quality tailored output and avoid hallucinations
+    that local models tend to introduce in generative prose tasks.
+
+    Falls back to the legacy OPENAI_API_KEY path if the explicit cloud provider
+    is not configured.
+    """
+    if settings.cloud_llm_configured():
+        return OpenAIProvider(
+            settings,
+            api_key=settings.cloud_openai_api_key,
+            base_url=settings.cloud_openai_base_url,
+            model=settings.cloud_openai_model,
+            provider_name="cloud",
+        )
+
+    if settings.openai_api_key:
+        return OpenAIProvider(settings)
+
+    return None
