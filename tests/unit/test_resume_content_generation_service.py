@@ -57,7 +57,12 @@ class TestResumeContentGenerationService:
             async def generate_resume_content(self, job_posting_id, profile, requirements, strategy, selected):
                 return GeneratedResumeContent(
                     job_posting_id=job_posting_id,
-                    executive_summary="Tailored summary.",
+                    executive_summary=(
+                        "Engineering delivery leader with 15 years of software delivery experience. "
+                        "Leads distributed teams and drives measurable execution outcomes. "
+                        "Builds AI-assisted engineering workflows to improve developer productivity. "
+                        "Aligns platform, compliance, and cloud initiatives with business goals."
+                    ),
                     experience_bullets=[
                         GeneratedWorkHistoryBullets(company="TechCorp", bullets=["Rewrote bullet."])
                     ],
@@ -71,7 +76,7 @@ class TestResumeContentGenerationService:
         result = await service.generate(1, profile, JobRequirements(), strategy, accomplishments)
 
         assert result.generated_by == "llm"
-        assert result.executive_summary == "Tailored summary."
+        assert "Engineering delivery leader" in result.executive_summary
         assert result.experience_bullets[0].bullets == ["Rewrote bullet."]
 
     @pytest.mark.asyncio
@@ -102,7 +107,12 @@ class TestResumeContentGenerationService:
             async def generate_resume_content(self, job_posting_id, profile, requirements, strategy, selected):
                 return GeneratedResumeContent(
                     job_posting_id=job_posting_id,
-                    executive_summary="Tailored summary.",
+                    executive_summary=(
+                        "Engineering leader focused on delivery outcomes and operational reliability. "
+                        "Partners across teams to improve execution quality and cycle time. "
+                        "Applies automation and AI-assisted workflows where appropriate. "
+                        "Builds accountable teams with measurable impact."
+                    ),
                     accomplishment_bullets=[
                         # 150000 is fabricated
                         GeneratedAccomplishmentBullet(
@@ -115,6 +125,13 @@ class TestResumeContentGenerationService:
 
         service = ResumeContentGenerationService(llm=HallucinatingLLM())
         result = await service.generate(1, profile, JobRequirements(), strategy, [acc])
+
+        assert result.generated_by == "llm"
+        assert result.accomplishment_bullets[0].id == "acc-1"
+        assert (
+            result.accomplishment_bullets[0].generated_text
+            == "AWS Enablement: Trained 500 engineers with 98% completion."
+        )
 
     @pytest.mark.asyncio
     async def test_fuzzy_company_match_allows_cross_source_numbers(self, profile, strategy):
@@ -150,7 +167,12 @@ class TestResumeContentGenerationService:
             async def generate_resume_content(self, job_posting_id, prof, requirements, strategy, selected):
                 return GeneratedResumeContent(
                     job_posting_id=job_posting_id,
-                    executive_summary="Summary.",
+                    executive_summary=(
+                        "Technical delivery leader with deep experience in engineering execution. "
+                        "Leads distributed teams and drives quality and throughput improvements. "
+                        "Uses automation and AI-assisted practices to strengthen delivery outcomes. "
+                        "Brings compliance and operational rigor to complex delivery environments."
+                    ),
                     accomplishment_bullets=[
                         GeneratedAccomplishmentBullet(
                             id="JJK-004",
@@ -171,4 +193,97 @@ class TestResumeContentGenerationService:
         # Should NOT have been scrubbed — 80, 50, 2, 27001 all come from work history
         assert "80" in bullet.generated_text, "80 should survive fuzzy company match"
         assert "27001" in bullet.generated_text, "27001 should survive fuzzy company match"
+
+    @pytest.mark.asyncio
+    async def test_ai_heavy_summary_retries_with_guidance(self, profile, strategy, accomplishments):
+        class RetryLLM:
+            def __init__(self) -> None:
+                self.guided_calls = 0
+
+            async def generate_resume_content(self, job_posting_id, profile, requirements, strategy, selected):
+                return GeneratedResumeContent(
+                    job_posting_id=job_posting_id,
+                    executive_summary=(
+                        "Engineering delivery leader with strong leadership outcomes. "
+                        "Drives cross-functional execution and operational excellence. "
+                        "Builds reliable delivery systems across distributed teams. "
+                        "Partners with stakeholders to deliver measurable business results."
+                    ),
+                    generated_by="llm",
+                )
+
+            async def generate_resume_content_with_guidance(
+                self,
+                job_posting_id,
+                profile,
+                requirements,
+                strategy,
+                selected,
+                summary_guidance,
+            ):
+                self.guided_calls += 1
+                return GeneratedResumeContent(
+                    job_posting_id=job_posting_id,
+                    executive_summary=(
+                        "Engineering delivery leader with deep experience building AI-enabled execution systems. "
+                        "Leads distributed teams and scales AI and Copilot adoption to improve developer productivity. "
+                        "Drives AI automation, agent-based workflows, and governance-aligned delivery outcomes. "
+                        "Partners with stakeholders to deliver measurable, AI-informed business impact."
+                    ),
+                    generated_by="llm",
+                )
+
+        requirements = JobRequirements(
+            ai_requirements=["LLM integration", "AI agents"],
+            important_keywords=["AI transformation", "copilot", "leadership"],
+            role_summary="Lead AI platform initiatives while managing distributed teams.",
+            leadership_requirements=["team leadership"],
+        )
+        llm = RetryLLM()
+        service = ResumeContentGenerationService(llm=llm)
+
+        result = await service.generate(1, profile, requirements, strategy, accomplishments)
+
+        assert llm.guided_calls == 1
+        assert result.generated_by == "llm"
+        lowered = result.executive_summary.lower()
+        assert lowered.count("ai") >= 2
+
+    @pytest.mark.asyncio
+    async def test_ai_heavy_summary_retry_failure_falls_back_to_static(self, profile, strategy, accomplishments):
+        class AlwaysBadSummaryLLM:
+            async def generate_resume_content(self, job_posting_id, profile, requirements, strategy, selected):
+                return GeneratedResumeContent(
+                    job_posting_id=job_posting_id,
+                    executive_summary="Short summary.",
+                    generated_by="llm",
+                )
+
+            async def generate_resume_content_with_guidance(
+                self,
+                job_posting_id,
+                profile,
+                requirements,
+                strategy,
+                selected,
+                summary_guidance,
+            ):
+                return GeneratedResumeContent(
+                    job_posting_id=job_posting_id,
+                    executive_summary="Still short.",
+                    generated_by="llm",
+                )
+
+        requirements = JobRequirements(
+            ai_requirements=["AI agents"],
+            important_keywords=["ai", "copilot", "leadership"],
+            role_summary="Need an AI-heavy engineering leader.",
+            leadership_requirements=["leadership"],
+        )
+        service = ResumeContentGenerationService(llm=AlwaysBadSummaryLLM())
+
+        result = await service.generate(1, profile, requirements, strategy, accomplishments)
+
+        assert result.generated_by == "static"
+        assert result.executive_summary == profile.summary
 

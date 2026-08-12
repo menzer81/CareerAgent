@@ -50,7 +50,7 @@ class ResumeService:
 
         accomplishments = load_accomplishments()
         self.achievement_service = AchievementSelectionService(accomplishments)
-        self.strategy_service = ResumeStrategyService()
+        self.strategy_service = ResumeStrategyService(llm)
         self.coverage_service = KeywordCoverageService()
         self.data_model_service = ResumeDataModelService()
         self.document_service = ResumeDocumentService()
@@ -110,7 +110,7 @@ class ResumeService:
             boost_multiplier=boost_multiplier,
             top_n=top_n,
         )
-        strategy = self.strategy_service.build_strategy(
+        strategy = await self.strategy_service.build_strategy(
             job_posting_id, requirements, profile, selection, boost_multiplier=boost_multiplier
         )
         coverage = self.coverage_service.compute_coverage(requirements, profile)

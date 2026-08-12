@@ -9,7 +9,7 @@ import logging
 
 from app.schemas.analysis import JobRequirements
 from app.schemas.candidate_profile import CandidateProfileData
-from app.schemas.resume import AccomplishmentEntry, GeneratedResumeContent, ResumeStrategy
+from app.schemas.resume import AccomplishmentEntry, GeneratedResumeContent, ResumePersona, ResumeStrategy
 from app.schemas.scoring import FullAnalysisResult
 from app.services.llm.base import BaseLLMProvider
 
@@ -30,6 +30,19 @@ class FallbackLLMProvider(BaseLLMProvider):
             except Exception as exc:  # pragma: no cover - defensive fallback behavior
                 last_error = exc
                 logger.warning("LLM extract failed on provider %d/%d: %s", idx, len(self.providers), exc)
+        assert last_error is not None
+        raise last_error
+
+    async def select_resume_persona(self, requirements: JobRequirements) -> ResumePersona:
+        last_error: Exception | None = None
+        for idx, provider in enumerate(self.providers, start=1):
+            try:
+                return await provider.select_resume_persona(requirements)
+            except Exception as exc:  # pragma: no cover - defensive fallback behavior
+                last_error = exc
+                logger.warning(
+                    "LLM persona selection failed on provider %d/%d: %s", idx, len(self.providers), exc
+                )
         assert last_error is not None
         raise last_error
 

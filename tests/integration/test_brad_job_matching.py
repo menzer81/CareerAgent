@@ -111,12 +111,12 @@ class TestStretchOpportunities:
         result = rule_based_score(BRAD_PROFILE, requirements, job_posting_id=1)
         assert 55 <= result.scoring.overall_score <= 85
 
-    def test_director_role_emphasizes_manager_of_managers(self, stretch_job: dict) -> None:
+    async def test_director_role_emphasizes_manager_of_managers(self, stretch_job: dict) -> None:
         requirements = JobRequirements.model_validate(stretch_job["requirements"])
         selection = AchievementSelectionService(ACCOMPLISHMENTS).select_achievements(
             1, requirements
         )
-        strategy = ResumeStrategyService().build_strategy(
+        strategy = await ResumeStrategyService().build_strategy(
             1, requirements, BRAD_PROFILE, selection
         )
         assert "manager-of-managers" in strategy.emphasize
@@ -195,7 +195,7 @@ class TestAchievementRanking:
 class TestResumeStrategyOutput:
     """Resume Strategy Service behavior against real requirements/profile."""
 
-    def test_ai_role_emphasizes_ai_transformation(self) -> None:
+    async def test_ai_role_emphasizes_ai_transformation(self) -> None:
         requirements = JobRequirements(
             ai_requirements=["AI", "Copilot", "LLM"],
             important_keywords=["AI Transformation"],
@@ -203,7 +203,7 @@ class TestResumeStrategyOutput:
         selection = AchievementSelectionService(ACCOMPLISHMENTS).select_achievements(
             1, requirements
         )
-        strategy = ResumeStrategyService().build_strategy(
+        strategy = await ResumeStrategyService().build_strategy(
             1, requirements, BRAD_PROFILE, selection
         )
         assert "AI Transformation" in strategy.key_themes

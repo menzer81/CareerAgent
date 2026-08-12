@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import logging
 import re
+from collections.abc import Awaitable, Callable
 
 from app.schemas.analysis import JobRequirements
 from app.schemas.candidate_profile import CandidateProfileData, WorkHistoryEntry
@@ -36,6 +37,12 @@ _COMPANY_NOISE = re.compile(r"[^a-z0-9\s]")
 _COMPANY_SUFFIXES = re.compile(
     r"\b(inc|llc|ltd|corp|co|associates|group|solutions|services|technologies|tech)\b"
 )
+_SUMMARY_SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
+_AI_TERM_PATTERN = re.compile(r"\b(ai|copilot|llm|agent(?:s)?|automation|machine learning|ml)\b", re.IGNORECASE)
+_LEADERSHIP_TERM_PATTERN = re.compile(r"\b(lead|leadership|manager|management|director|vp|team|stakeholder)\b", re.IGNORECASE)
+_MIN_SUMMARY_SENTENCES = 4
+_MAX_SUMMARY_SENTENCES = 6
+_MIN_AI_MENTIONS_WHEN_AI_HEAVY = 2
 
 
 def _normalise_company(name: str) -> str:
@@ -114,6 +121,80 @@ def _source_numbers_for_work_entry(entry: WorkHistoryEntry) -> set[str]:
 
 def _safe_static_bullet(acc: AccomplishmentEntry) -> str:
     return f"{acc.title}: {acc.impact}" if acc.impact else acc.title
+
+
+def _sentence_count(text: str) -> int:
+    cleaned = (text or "").strip()
+    if not cleaned:
+        return 0
+    parts = [segment.strip() for segment in _SUMMARY_SENTENCE_SPLIT.split(cleaned) if segment.strip()]
+    return len(parts)
+
+
+def _is_ai_heavy_or_equal(requirements: JobRequirements) -> bool:
+    role_summary = (requirements.role_summary or "")
+    ai_count = len(requirements.ai_requirements)
+    ai_count += sum(1 for kw in requirements.important_keywords if _AI_TERM_PATTERN.search(kw))
+    if _AI_TERM_PATTERN.search(role_summary):
+        ai_count += 1
+
+    leadership_count = len(requirements.leadership_requirements)
+    leadership_count += sum(1 for kw in requirements.important_keywords if _LEADERSHIP_TERM_PATTERN.search(kw))
+    if requirements.manager_of_managers_required or requirements.director_level_or_above:
+        leadership_count += 1
+    if _LEADERSHIP_TERM_PATTERN.search(role_summary):
+        leadership_count += 1
+
+    return ai_count > 0 and ai_count >= leadership_count
+
+
+def _summary_quality_failures(summary: str, requirements: JobRequirements) -> list[str]:
+    failures: list[str] = []
+    sentence_count = _sentence_count(summary)
+    if sentence_count < _MIN_SUMMARY_SENTENCES or sentence_count > _MAX_SUMMARY_SENTENCES:
+        failures.append(
+            f"sentence_count={sentence_count} (expected {_MIN_SUMMARY_SENTENCES}-{_MAX_SUMMARY_SENTENCES})"
+        )
+
+    if len((summary or "").strip()) < 80:
+        failures.append("summary_too_short_chars")
+
+    if _is_ai_heavy_or_equal(requirements):
+        ai_mentions = len(_AI_TERM_PATTERN.findall(summary or ""))
+        if ai_mentions < _MIN_AI_MENTIONS_WHEN_AI_HEAVY:
+            failures.append(
+                f"ai_mentions={ai_mentions} (expected >= {_MIN_AI_MENTIONS_WHEN_AI_HEAVY})"
+            )
+
+    return failures
+
+
+async def _call_with_optional_summary_guidance(
+    llm: BaseLLMProvider,
+    job_posting_id: int,
+    profile: CandidateProfileData,
+    requirements: JobRequirements,
+    strategy: ResumeStrategy,
+    selected_accomplishments: list[AccomplishmentEntry],
+    summary_guidance: str | None,
+) -> GeneratedResumeContent:
+    guided_method = getattr(llm, "generate_resume_content_with_guidance", None)
+    if summary_guidance and callable(guided_method):
+        return await guided_method(
+            job_posting_id,
+            profile,
+            requirements,
+            strategy,
+            selected_accomplishments,
+            summary_guidance,
+        )
+    return await llm.generate_resume_content(
+        job_posting_id,
+        profile,
+        requirements,
+        strategy,
+        selected_accomplishments,
+    )
 
 
 def _scrub_hallucinated_bullets(
@@ -247,9 +328,46 @@ class ResumeContentGenerationService:
             return _static_content(job_posting_id, profile, selected_accomplishments)
 
         try:
-            content = await self.llm.generate_resume_content(
-                job_posting_id, profile, requirements, strategy, selected_accomplishments
+            content = await _call_with_optional_summary_guidance(
+                self.llm,
+                job_posting_id,
+                profile,
+                requirements,
+                strategy,
+                selected_accomplishments,
+                None,
             )
+            failures = _summary_quality_failures(content.executive_summary, requirements)
+            if failures:
+                logger.warning(
+                    "Executive summary quality check failed for job_posting_id=%d (%s); retrying once with stricter guidance.",
+                    job_posting_id,
+                    "; ".join(failures),
+                )
+                retry_guidance = (
+                    "Corrective guidance: executive_summary must be 4-6 sentences, include role fit, "
+                    "leadership/delivery strengths, and job-relevant domain strengths grounded in candidate data. "
+                    "If AI demand is greater than or equal to leadership demand, include at least two AI mentions."
+                )
+                retry_content = await _call_with_optional_summary_guidance(
+                    self.llm,
+                    job_posting_id,
+                    profile,
+                    requirements,
+                    strategy,
+                    selected_accomplishments,
+                    retry_guidance,
+                )
+                retry_failures = _summary_quality_failures(retry_content.executive_summary, requirements)
+                if retry_failures:
+                    logger.warning(
+                        "Executive summary quality retry failed for job_posting_id=%d (%s); falling back to static content.",
+                        job_posting_id,
+                        "; ".join(retry_failures),
+                    )
+                    return _static_content(job_posting_id, profile, selected_accomplishments)
+                content = retry_content
+
             return _scrub_hallucinated_bullets(content, selected_accomplishments, profile)
         except Exception as exc:
             logger.warning(

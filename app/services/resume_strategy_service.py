@@ -8,6 +8,8 @@ is removed).
 
 from __future__ import annotations
 
+import logging
+
 from app.schemas.analysis import JobRequirements
 from app.schemas.candidate_profile import CandidateProfileData
 from app.schemas.resume import AchievementSelectionResult, ResumePersona, ResumeStrategy
@@ -15,6 +17,9 @@ from app.services.achievement_selection_service import (
     DEFAULT_BOOST_MULTIPLIER,
     requirement_signals,
 )
+from app.services.llm.base import BaseLLMProvider
+
+logger = logging.getLogger(__name__)
 
 _PERSONA_THEMES: dict[ResumePersona, list[str]] = {
     ResumePersona.AI_TRANSFORMATION_LEADER: [
@@ -130,10 +135,32 @@ def _build_exclusions(
     return deemphasize, omit
 
 
+async def select_persona_with_llm(
+    requirements: JobRequirements, llm: BaseLLMProvider | None
+) -> ResumePersona:
+    """Pick a resume persona using the cloud LLM when available.
+
+    Falls back to the deterministic keyword-based ``select_persona`` if no
+    LLM is configured, or if the LLM call fails/returns something unusable,
+    so persona selection never blocks resume generation.
+    """
+    if llm is not None:
+        try:
+            return await llm.select_resume_persona(requirements)
+        except Exception as exc:  # pragma: no cover - defensive fallback behavior
+            logger.warning(
+                "LLM persona selection failed; falling back to rule-based selection: %s", exc
+            )
+    return select_persona(requirements)
+
+
 class ResumeStrategyService:
     """Builds a ``ResumeStrategy`` from job requirements, profile, and achievement selection."""
 
-    def build_strategy(
+    def __init__(self, llm: BaseLLMProvider | None = None) -> None:
+        self.llm = llm
+
+    async def build_strategy(
         self,
         job_posting_id: int,
         requirements: JobRequirements,
@@ -141,7 +168,7 @@ class ResumeStrategyService:
         selection: AchievementSelectionResult,
         boost_multiplier: float = DEFAULT_BOOST_MULTIPLIER,
     ) -> ResumeStrategy:
-        persona = select_persona(requirements)
+        persona = await select_persona_with_llm(requirements, self.llm)
         key_themes = list(_PERSONA_THEMES[persona])
 
         # Surface up to two important job keywords not already represented as themes.

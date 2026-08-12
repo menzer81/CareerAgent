@@ -71,6 +71,13 @@ def mock_llm() -> BaseLLMProvider:
         )
     )
 
+    async def _select_resume_persona(requirements):
+        from app.services.resume_strategy_service import select_persona
+
+        return select_persona(requirements)
+
+    provider.select_resume_persona = AsyncMock(side_effect=_select_resume_persona)
+
     provider.score_and_analyze = AsyncMock(
         return_value=FullAnalysisResult(
             job_posting_id=1,

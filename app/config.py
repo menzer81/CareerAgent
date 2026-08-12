@@ -35,8 +35,8 @@ class Settings(BaseSettings):
     cloud_openai_api_key: str = ""
     cloud_openai_base_url: str = "https://api.openai.com/v1"
     cloud_openai_model: str = "gpt-5-mini"
-    llm_extract_timeout_seconds: int = Field(default=45, ge=1)
-    llm_scoring_timeout_seconds: int = Field(default=60, ge=1)
+    llm_extract_timeout_seconds: int = Field(default=75, ge=1)
+    llm_scoring_timeout_seconds: int = Field(default=90, ge=1)
 
     # Reports output directory
     reports_dir: Path = Path("./reports")

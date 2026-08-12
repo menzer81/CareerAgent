@@ -17,7 +17,7 @@ from openai import AsyncOpenAI
 from app.config import Settings
 from app.schemas.analysis import JobRequirements
 from app.schemas.candidate_profile import CandidateProfileData
-from app.schemas.resume import AccomplishmentEntry, GeneratedResumeContent, ResumeStrategy
+from app.schemas.resume import AccomplishmentEntry, GeneratedResumeContent, ResumePersona, ResumeStrategy
 from app.schemas.scoring import (
     DimensionScore,
     FullAnalysisResult,
@@ -39,6 +39,11 @@ from a job posting and return valid JSON matching the provided schema exactly.
 Be thorough — capture all required skills, preferred skills, leadership requirements,
 cloud requirements, AI/ML requirements, and key keywords.
 For boolean fields, infer from the job description context."""
+
+_PERSONA_SYSTEM_PROMPT = """You are an expert resume strategist. Given a set of structured job
+requirements, choose the single resume persona (framing of the candidate's experience) that will
+resonate most with this specific job. Return valid JSON exactly matching the provided schema —
+your "persona" field must be one of the allowed enum values, copied verbatim."""
 
 _SCORE_SYSTEM_PROMPT = """You are a senior technical recruiter and career coach specializing
 in software engineering leadership roles. You are given a candidate profile and a structured
@@ -65,10 +70,14 @@ Violation of this rule makes the resume legally and professionally harmful to th
 Your job is to REWRITE resume copy so it is CLEARLY AND SPECIFICALLY tailored to THIS job:
 
 EXECUTIVE SUMMARY rules:
-- Write 2-4 sentences targeted at this specific job — mention the role type, key skills from the
-  job requirements, and the candidate's most relevant experience. Do NOT write a generic summary.
+- Write 4-6 sentences targeted at this specific job — mention the role type, key skills from the
+    job requirements, and the candidate's most relevant experience. Do NOT write a generic summary.
 - Mirror the language and priorities from the job's requirements and important_keywords.
 - The summary should read differently for a compliance role vs an AI role vs a cloud role.
+- The summary must include role fit, leadership/delivery strengths, and relevant technical domain
+    strengths (AI/cloud/compliance) that are supported by the candidate profile.
+- If the job is AI-heavy relative to leadership demand, include at least two AI references in
+    the summary using candidate-supported terms (AI, Copilot, agents, LLM, automation).
 
 EXPERIENCE BULLETS rules:
 - Reorder bullets within each role to lead with the accomplishments most relevant to THIS job.
@@ -165,6 +174,63 @@ def _clamp_score(value: Any, default: float = 0.0) -> float:
     except (TypeError, ValueError):
         score = default
     return max(0.0, min(100.0, score))
+
+
+_AI_SIGNAL_TERMS = (
+    "ai",
+    "artificial intelligence",
+    "machine learning",
+    "ml",
+    "llm",
+    "copilot",
+    "agent",
+    "automation",
+)
+
+_LEADERSHIP_SIGNAL_TERMS = (
+    "lead",
+    "leadership",
+    "manager",
+    "management",
+    "director",
+    "vp",
+    "stakeholder",
+    "organization",
+    "team",
+)
+
+
+def _count_keyword_hits(keywords: list[str], terms: tuple[str, ...]) -> int:
+    count = 0
+    lowered = [kw.lower() for kw in keywords]
+    for kw in lowered:
+        if any(term in kw for term in terms):
+            count += 1
+    return count
+
+
+def summarize_signal_balance(requirements: JobRequirements) -> tuple[int, int, bool]:
+    """Return AI and leadership signal counts and whether AI should be emphasized.
+
+    AI-heavy means AI signal count is at least leadership signal count and AI
+    signals are present.
+    """
+    role_summary = (requirements.role_summary or "").lower()
+
+    ai_count = len(requirements.ai_requirements)
+    ai_count += _count_keyword_hits(requirements.important_keywords, _AI_SIGNAL_TERMS)
+    if any(term in role_summary for term in _AI_SIGNAL_TERMS):
+        ai_count += 1
+
+    leadership_count = len(requirements.leadership_requirements)
+    leadership_count += _count_keyword_hits(requirements.important_keywords, _LEADERSHIP_SIGNAL_TERMS)
+    if requirements.manager_of_managers_required or requirements.director_level_or_above:
+        leadership_count += 1
+    if any(term in role_summary for term in _LEADERSHIP_SIGNAL_TERMS):
+        leadership_count += 1
+
+    should_emphasize_ai = ai_count > 0 and ai_count >= leadership_count
+    return ai_count, leadership_count, should_emphasize_ai
 
 
 def _pick_value(payload: dict[str, Any], aliases: list[str]) -> Any:
@@ -408,9 +474,25 @@ class OpenAIProvider(BaseLLMProvider):
 
     async def extract_job_requirements(self, job_text: str) -> JobRequirements:
         schema = JobRequirements.model_json_schema()
-        user_prompt = f"""Extract the job requirements from the following job posting.
-Return a JSON object that strictly follows this schema:
+        user_prompt = f"""Extract structured requirements from the following job posting.
+        
+Look for these key pieces of information:
+- Job title/position (often at the top, or labeled "Job Title:", "Position:", "Role:", "Job Family:")
+- Company name (often in header or near bottom in "About [Company]", or deducible from context)
+- Required skills, technologies, and frameworks
+- Preferred/nice-to-have skills
+- Leadership or management requirements
+- Cloud platform requirements (AWS, Azure, GCP)
+- AI/ML/automation requirements
+
+Return a JSON object that STRICTLY follows this schema and captures these elements:
 {json.dumps(schema, indent=2)}
+
+Make especially sure to populate:
+- inferred_title: The job title or role name (e.g. "Senior Software Engineer", "Engineering Manager")
+- inferred_company: The company hiring for this role (e.g. "Microsoft", "Acme Corp")
+- required_skills, preferred_skills: Technology stacks, frameworks, languages
+- required_keywords, important_keywords: Key terms and phrases that appear multiple times
 
 JOB POSTING:
 {job_text}"""
@@ -437,6 +519,41 @@ JOB POSTING:
         )
         return JobRequirements.model_validate(data)
 
+    async def select_resume_persona(self, requirements: JobRequirements) -> ResumePersona:
+        persona_values = [p.value for p in ResumePersona]
+        user_prompt = f"""Choose the resume persona that best fits this job's requirements.
+
+Allowed personas (return the "persona" field as EXACTLY one of these strings):
+{json.dumps(persona_values, indent=2)}
+
+JOB REQUIREMENTS:
+{requirements.model_dump_json(indent=2)}
+
+Return a JSON object of the form: {{"persona": "<one of the allowed persona strings>"}}"""
+
+        logger.debug("Calling LLM to select resume persona")
+        response = await self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": _PERSONA_SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ],
+            response_format={"type": "json_object"},
+            temperature=self._temperature(0.0),
+        )
+        data, _source, _parse_mode = _extract_response_json_payload(response)
+        raw_persona = str(data.get("persona", "")).strip()
+        try:
+            return ResumePersona(raw_persona)
+        except ValueError:
+            # Some models return the enum member name instead of its value
+            # (e.g. "AI_TRANSFORMATION_LEADER" instead of "AI Transformation Leader").
+            normalized = raw_persona.strip().lower().replace("_", " ").replace("-", " ")
+            for persona in ResumePersona:
+                if persona.value.lower() == normalized or persona.name.lower().replace("_", " ") == normalized:
+                    return persona
+            raise ValueError(f"LLM returned unrecognized persona: {raw_persona!r}")
+
     async def score_and_analyze(
         self,
         profile: CandidateProfileData,
@@ -456,13 +573,26 @@ JOB REQUIREMENTS:
 
 The job_posting_id field must be: {job_posting_id}
 
+CRITICAL ANALYSIS INSTRUCTIONS:
+
 Scoring guidance per dimension:
 - leadership_match: Compare leadership history, team size, org complexity, MoM experience
-- technical_match: Overlap of required+preferred skills vs candidate technologies
+- technical_match: Compare REQUIRED and PREFERRED technologies:
+  * List what the job requires/prefers (languages, frameworks, databases, tools)
+  * List what the candidate demonstrably has (from core_skills and work history)
+  * Identify specific GAPS (required tech the candidate lacks) and MISMATCHES (e.g., Java vs C#)
+  * Score based on overlap; tech stack gaps should significantly lower this score
 - cloud_match: Cloud platform alignment and specific service experience
 - ai_match: AI/ML product and engineering experience alignment
 - management_scope_match: Team size, direct reports, cross-functional scope, budget
 - industry_match: Domain/vertical experience alignment
+
+For gap_analysis:
+- Potential Gaps section MUST explicitly call out TECHNOLOGY/SKILL MISMATCHES:
+  * If job requires Java/Spring Boot and candidate has C#/.NET, flag as "Java/Spring Boot experience" gap
+  * If job requires specific databases (NoSQL, etc) and candidate has different tech, flag it
+  * Do NOT omit tech stack gaps from the analysis
+- Include these alongside other gaps like leadership level, scale experience, etc.
 
 For overall_score: weighted sum using
   leadership=20%, technical=25%, cloud=15%, ai=10%, management=15%, industry=15%
@@ -502,12 +632,65 @@ Recommendation tiers:
         strategy: ResumeStrategy,
         selected_accomplishments: list[AccomplishmentEntry],
     ) -> GeneratedResumeContent:
+        return await self._generate_resume_content(
+            job_posting_id,
+            profile,
+            requirements,
+            strategy,
+            selected_accomplishments,
+            summary_guidance=None,
+        )
+
+    async def generate_resume_content_with_guidance(
+        self,
+        job_posting_id: int,
+        profile: CandidateProfileData,
+        requirements: JobRequirements,
+        strategy: ResumeStrategy,
+        selected_accomplishments: list[AccomplishmentEntry],
+        summary_guidance: str,
+    ) -> GeneratedResumeContent:
+        """Generate resume content with additional summary constraints for retry flows."""
+        return await self._generate_resume_content(
+            job_posting_id,
+            profile,
+            requirements,
+            strategy,
+            selected_accomplishments,
+            summary_guidance=summary_guidance,
+        )
+
+    async def _generate_resume_content(
+        self,
+        job_posting_id: int,
+        profile: CandidateProfileData,
+        requirements: JobRequirements,
+        strategy: ResumeStrategy,
+        selected_accomplishments: list[AccomplishmentEntry],
+        summary_guidance: str | None,
+    ) -> GeneratedResumeContent:
         schema = GeneratedResumeContent.model_json_schema()
         # Build a concise job-signal summary to prime the model before the full data dump
         top_keywords = ", ".join(requirements.important_keywords[:10]) if requirements.important_keywords else "none"
         top_ai_reqs = ", ".join(requirements.ai_requirements[:5]) if requirements.ai_requirements else "none"
         top_cloud_reqs = ", ".join(requirements.cloud_requirements[:5]) if requirements.cloud_requirements else "none"
         role_summary_line = requirements.role_summary or "Not specified"
+        ai_signal_count, leadership_signal_count, should_emphasize_ai = summarize_signal_balance(requirements)
+
+        # Normalize accomplishment metrics to integers for clean serialization (500.0 → 500)
+        normalized_accs = []
+        for acc in selected_accomplishments:
+            acc_dict = acc.model_dump()
+            if acc_dict.get("metrics"):
+                normalized_metrics = {}
+                for k, v in acc_dict["metrics"].items():
+                    # Convert float 500.0 to int 500
+                    if isinstance(v, float) and v == int(v):
+                        normalized_metrics[k] = int(v)
+                    else:
+                        normalized_metrics[k] = v
+                acc_dict["metrics"] = normalized_metrics
+            normalized_accs.append(acc_dict)
 
         # Build an explicit inventory of permitted numbers per role so the model
         # cannot claim it was "inferring" — if it's not in this list, it's fabricated.
@@ -518,7 +701,7 @@ Recommendation tiers:
                 nums |= {m.replace(",", "") for m in re.findall(r"\d+(?:[.,]\d+)?", text)}
             for field in (entry.team_size, entry.direct_reports, entry.largest_org_influence):
                 if field is not None:
-                    nums.add(str(field))
+                    nums.add(str(int(field) if isinstance(field, float) and field == int(field) else field))
             permitted_numbers_by_company[entry.company] = nums
 
         permitted_numbers_lines = "\n".join(
@@ -548,6 +731,13 @@ Director/MoM required: {requirements.director_level_or_above or requirements.man
 === PERMITTED NUMBERS PER ROLE (EXHAUSTIVE — use ONLY these numbers in experience_bullets) ===
 {permitted_numbers_lines}
 
+=== SUMMARY CONSTRAINTS ===
+Executive summary sentence target: 4-6 sentences.
+AI signal count: {ai_signal_count}
+Leadership signal count: {leadership_signal_count}
+AI-heavy-or-equal profile: {should_emphasize_ai}
+{f"Additional retry guidance: {summary_guidance}" if summary_guidance else ""}
+
 === FULL DATA ===
 
 CANDIDATE PROFILE:
@@ -560,12 +750,24 @@ RESUME STRATEGY:
 {strategy.model_dump_json(indent=2)}
 
 SELECTED ACCOMPLISHMENTS:
-{json.dumps([a.model_dump() for a in selected_accomplishments], indent=2)}
+{json.dumps(normalized_accs, indent=2)}
 
 CRITICAL rules (do NOT deviate):
 - ⚠️  NUMBERS: You may ONLY use numbers listed in "PERMITTED NUMBERS PER ROLE" above for
   experience_bullets, and numbers from each accomplishment's impact/metrics for
   accomplishment_bullets. Any other number is fabricated and must NOT appear.
+- Executive summary must be 4-6 sentences and include role fit, leadership/delivery strengths,
+    and candidate-supported domain strengths.
+- If "AI-heavy-or-equal profile" is true, executive_summary must include at least two mentions
+    of AI-related terms grounded in the candidate data.
+- Use terminology from the job posting,
+  but do not reference the employer's internal team names,
+  departments, products, or business units (e.g. "FIIG Technology").
+  - Avoid presumptive terminology from the job posting,
+  such as "Ready to lead @<company>'s team".  The resume should be tailored to the job's requirements, 
+  not the employer's internal org.
+- Do not overstate experience or job titles. Allowed: "Software Development Manager", "Engineering Manager", "Software Engineer", "Engineering Leader", "Senior Engineering Manager", etc.
+  Important!!! - Not allowed: "Director-level engineering leader", "Head of Engineering", "Chief Engineer", "Principal Engineer", "Executive leader", "Enterprise AI executive", etc.
 - For experience_bullets: each item must have "company" (string) and "bullets" (list of strings).
   Include one entry per company in the candidate's work_history that has key_accomplishments.
   Use the exact "company" name from work_history.

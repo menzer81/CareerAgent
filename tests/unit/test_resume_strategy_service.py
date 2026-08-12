@@ -43,37 +43,37 @@ class TestPersonaSelection:
 
 
 class TestResumeStrategyOutput:
-    def test_director_role_emphasizes_manager_of_managers(self, profile, selection_service):
+    async def test_director_role_emphasizes_manager_of_managers(self, profile, selection_service):
         reqs = JobRequirements(director_level_or_above=True)
         selection = selection_service.select_achievements(1, reqs)
-        strategy = ResumeStrategyService().build_strategy(1, reqs, profile, selection)
+        strategy = await ResumeStrategyService().build_strategy(1, reqs, profile, selection)
         assert "manager-of-managers" in strategy.emphasize
 
-    def test_ai_role_emphasizes_ai_transformation(self, profile, selection_service):
+    async def test_ai_role_emphasizes_ai_transformation(self, profile, selection_service):
         reqs = JobRequirements(ai_requirements=["LLM"])
         selection = selection_service.select_achievements(1, reqs)
-        strategy = ResumeStrategyService().build_strategy(1, reqs, profile, selection)
+        strategy = await ResumeStrategyService().build_strategy(1, reqs, profile, selection)
         assert "AI Transformation" in strategy.key_themes
         assert "AI Transformation" in strategy.emphasize
 
-    def test_pl_responsibility_emphasized_when_required(self, profile, selection_service):
+    async def test_pl_responsibility_emphasized_when_required(self, profile, selection_service):
         reqs = JobRequirements(p_and_l_responsibility=True)
         selection = selection_service.select_achievements(1, reqs)
-        strategy = ResumeStrategyService().build_strategy(1, reqs, profile, selection)
+        strategy = await ResumeStrategyService().build_strategy(1, reqs, profile, selection)
         assert "P&L ownership" in strategy.emphasize
 
-    def test_unmatched_technologies_are_deemphasized(self, profile, selection_service):
+    async def test_unmatched_technologies_are_deemphasized(self, profile, selection_service):
         reqs = JobRequirements(required_skills=["Python"])  # profile has Go/AWS/etc too
         selection = selection_service.select_achievements(1, reqs)
-        strategy = ResumeStrategyService().build_strategy(1, reqs, profile, selection)
+        strategy = await ResumeStrategyService().build_strategy(1, reqs, profile, selection)
         assert "legacy technologies" in strategy.deemphasize
 
-    def test_strategy_carries_boost_multiplier(self, profile, selection_service):
+    async def test_strategy_carries_boost_multiplier(self, profile, selection_service):
         reqs = JobRequirements(required_skills=["Python"])
         selection = selection_service.select_achievements(
             1, reqs, boosted_accomplishment_ids=["X"], boost_multiplier=2.5
         )
-        strategy = ResumeStrategyService().build_strategy(
+        strategy = await ResumeStrategyService().build_strategy(
             1, reqs, profile, selection, boost_multiplier=2.5
         )
         assert strategy.boost_multiplier == 2.5

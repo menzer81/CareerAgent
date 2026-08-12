@@ -201,9 +201,9 @@ class ReactiveResumeService:
                 },
                 "page": {
                     "gapX": 16,
-                    "gapY": 10,
+                    "gapY": 14,
                     "marginX": 25,
-                    "marginY": 25,
+                    "marginY": 28,
                     "format": plan.export_preferences.reactive_resume_page_format,
                     "locale": "en-US",
                     "hideIcons": False,
@@ -505,8 +505,8 @@ class ReactiveResumeService:
         cleaned = [escape(item.strip()) for item in items if item and item.strip()]
         if not cleaned:
             return ""
-        bullets = "".join(f"<li>{item}</li>" for item in cleaned)
-        return f"<ul>{bullets}</ul>"
+        bullets = "".join(f"<p>• {item}</p>" for item in cleaned)
+        return f"<div>{bullets}</div>"
 
     @staticmethod
     def _paragraph_html(text: str) -> str:

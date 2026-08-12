@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 from app.schemas.analysis import JobRequirements
 from app.schemas.candidate_profile import CandidateProfileData
-from app.schemas.resume import AccomplishmentEntry, GeneratedResumeContent, ResumeStrategy
+from app.schemas.resume import AccomplishmentEntry, GeneratedResumeContent, ResumePersona, ResumeStrategy
 from app.schemas.scoring import FullAnalysisResult
 
 
@@ -17,6 +17,16 @@ class BaseLLMProvider(ABC):
     @abstractmethod
     async def extract_job_requirements(self, job_text: str) -> JobRequirements:
         """Parse a raw job posting and return structured requirements."""
+        ...
+
+    @abstractmethod
+    async def select_resume_persona(self, requirements: JobRequirements) -> ResumePersona:
+        """Choose the resume persona that best fits a job's requirements.
+
+        Callers should treat any exception (or an unparseable response) as a
+        signal to fall back to the deterministic, keyword-based
+        ``select_persona`` in ``resume_strategy_service``.
+        """
         ...
 
     @abstractmethod

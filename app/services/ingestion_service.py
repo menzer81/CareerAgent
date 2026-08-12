@@ -12,12 +12,15 @@ logger = logging.getLogger(__name__)
 
 # Basic patterns to try to auto-extract title/company from raw text
 _TITLE_PATTERNS = [
-    re.compile(r"(?:job title|position|role)[:\s]+(.+)", re.IGNORECASE),
+    re.compile(r"(?:job title|position|role)[:\s]+(.+?)(?:\n|$)", re.IGNORECASE),
+    re.compile(r"^(?:job family:?|position:?)\s+(.+?)$", re.MULTILINE | re.IGNORECASE),
     re.compile(r"^#+\s*(.+)$", re.MULTILINE),  # Markdown heading
+    re.compile(r"^((?:[A-Z][a-zA-Z\s&]*(?:Manager|Engineer|Developer|Director|Lead)))(?:\s|$)", re.MULTILINE),
 ]
 _COMPANY_PATTERNS = [
     re.compile(r"(?:company|employer|organization|at\s+)[:\s]+([A-Z][^\n,]{2,60})", re.IGNORECASE),
     re.compile(r"^About\s+([A-Z][^\n,]{2,40})$", re.MULTILINE),
+    re.compile(r"(Citi(?:group)?)(?:\s|,|$)", re.IGNORECASE),  # Handle "Citi" variants
 ]
 
 

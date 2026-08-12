@@ -502,8 +502,8 @@ A `ResumePlan` response includes the achievement `selection` (rankings + explain
 | `CLOUD_OPENAI_API_KEY` | *(empty)* | Cloud API key used when cloud provider is enabled |
 | `CLOUD_OPENAI_BASE_URL` | `https://api.openai.com/v1` | Cloud OpenAI-compatible endpoint |
 | `CLOUD_OPENAI_MODEL` | `gpt-5-mini` | Cloud fallback model |
-| `LLM_EXTRACT_TIMEOUT_SECONDS` | `45` | Max seconds to wait for LLM requirement extraction before heuristic fallback |
-| `LLM_SCORING_TIMEOUT_SECONDS` | `60` | Max seconds to wait for LLM scoring before rule-based fallback |
+| `LLM_EXTRACT_TIMEOUT_SECONDS` | `75` | Max seconds to wait for LLM requirement extraction before heuristic fallback |
+| `LLM_SCORING_TIMEOUT_SECONDS` | `90` | Max seconds to wait for LLM scoring before rule-based fallback |
 | `DATABASE_URL` | `sqlite+aiosqlite:///./career_agent.db` | SQLAlchemy database URL |
 | `DEBUG` | `false` | Enable debug mode (verbose SQL logging) |
 | `LOG_LEVEL` | `INFO` | Logging level |
