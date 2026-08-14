@@ -17,7 +17,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { buildResumePlan, resumeDocxDownloadUrl, resumePdfDownloadUrl } from "../api/client";
-import type { ExportPreferences, ResumePlan } from "../types/api";
+import type { ExportPreferences, ResumePersona, ResumePlan } from "../types/api";
 
 interface Props {
   jobId: number;
@@ -44,11 +44,24 @@ const TEMPLATE_OPTIONS = [
 ] as const;
 
 const PAGE_FORMAT_OPTIONS = ["letter", "a4"] as const;
+const AUTO_PERSONA_VALUE = "auto";
+const PERSONA_OPTIONS: ResumePersona[] = [
+  "AI Transformation Leader",
+  "Engineering Turnaround Specialist",
+  "Compliance & Governance Leader",
+  "Technical Delivery Leader",
+  "Growth Engineering Leader",
+  "Cloud Transformation Leader",
+  "Director Track Candidate",
+];
 
 /** Generate Resume button, quality/coverage summary, markdown preview, exports. */
 export default function ResumeGenerationSection({ jobId, plan, onPlanReady }: Props) {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [personaSelection, setPersonaSelection] = useState<ResumePersona | typeof AUTO_PERSONA_VALUE>(
+    AUTO_PERSONA_VALUE
+  );
   const [exportPreferences, setExportPreferences] = useState<ExportPreferences>({
     reactive_resume_template: "onyx",
     reactive_resume_page_format: "letter",
@@ -58,6 +71,14 @@ export default function ResumeGenerationSection({ jobId, plan, onPlanReady }: Pr
     if (plan?.export_preferences) {
       setExportPreferences(plan.export_preferences);
     }
+    if (plan?.strategy) {
+      const recommended = plan.strategy.recommended_persona ?? plan.strategy.persona;
+      if (plan.strategy.persona !== recommended) {
+        setPersonaSelection(plan.strategy.persona);
+      } else {
+        setPersonaSelection(AUTO_PERSONA_VALUE);
+      }
+    }
   }, [plan]);
 
   async function handleGenerate() {
@@ -65,6 +86,8 @@ export default function ResumeGenerationSection({ jobId, plan, onPlanReady }: Pr
     setGenerating(true);
     try {
       const newPlan = await buildResumePlan(jobId, {
+        persona_override:
+          personaSelection === AUTO_PERSONA_VALUE ? undefined : personaSelection,
         export_preferences: exportPreferences,
       });
       onPlanReady(newPlan);
@@ -85,7 +108,27 @@ export default function ResumeGenerationSection({ jobId, plan, onPlanReady }: Pr
         {generating ? "Generating…" : "Generate Resume"}
       </Button>
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid size={{ xs: 12, sm: 6 }}>
+        <Grid size={{ xs: 12, sm: 4 }}>
+          <FormControl fullWidth size="small">
+            <InputLabel id="resume-persona-label">Persona</InputLabel>
+            <Select
+              labelId="resume-persona-label"
+              label="Persona"
+              value={personaSelection}
+              onChange={(event) =>
+                setPersonaSelection(event.target.value as ResumePersona | typeof AUTO_PERSONA_VALUE)
+              }
+            >
+              <MenuItem value={AUTO_PERSONA_VALUE}>Auto (Recommended)</MenuItem>
+              {PERSONA_OPTIONS.map((persona) => (
+                <MenuItem key={persona} value={persona}>
+                  {persona}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <FormControl fullWidth size="small">
             <InputLabel id="resume-template-label">Resume Template</InputLabel>
             <Select
@@ -107,7 +150,7 @@ export default function ResumeGenerationSection({ jobId, plan, onPlanReady }: Pr
             </Select>
           </FormControl>
         </Grid>
-        <Grid size={{ xs: 12, sm: 6 }}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <FormControl fullWidth size="small">
             <InputLabel id="resume-page-format-label">Page Format</InputLabel>
             <Select
@@ -138,6 +181,10 @@ export default function ResumeGenerationSection({ jobId, plan, onPlanReady }: Pr
       )}
 
       <Alert severity="info" sx={{ mb: 2 }}>
+        Recommended persona: {plan?.strategy.recommended_persona ?? plan?.strategy.persona ?? "(generate to see)"}
+        {" | "}
+        Selected persona: {personaSelection === AUTO_PERSONA_VALUE ? "Auto" : personaSelection}
+        {" | "}
         PDF export: {plan?.export_capabilities.pdf_renderer === "reactive-resume" ? "Reactive Resume" : "Local fallback"}
         {" | "}
         Template: {exportPreferences.reactive_resume_template}

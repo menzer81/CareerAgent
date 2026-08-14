@@ -36,6 +36,7 @@ async def build_resume_plan(
             boosted_accomplishment_ids=payload.boosted_accomplishment_ids or None,
             boost_multiplier=payload.boost_multiplier,
             top_n=payload.top_n,
+            persona_override=payload.persona_override,
             export_preferences=payload.export_preferences,
         )
     except NotFoundError as exc:

@@ -22,7 +22,7 @@ from app.repositories.job_analysis_repository import JobAnalysisRepository
 from app.repositories.resume_plan_repository import ResumePlanRepository
 from app.schemas.analysis import JobRequirements
 from app.schemas.candidate_profile import CandidateProfileData
-from app.schemas.resume import ExportCapabilities, ExportPreferences, ResumePlan
+from app.schemas.resume import ExportCapabilities, ExportPreferences, ResumePersona, ResumePlan
 from app.services.accomplishment_loader import load_accomplishments
 from app.services.achievement_selection_service import (
     DEFAULT_BOOST_MULTIPLIER,
@@ -66,6 +66,7 @@ class ResumeService:
         boosted_accomplishment_ids: list[str] | None = None,
         boost_multiplier: float = DEFAULT_BOOST_MULTIPLIER,
         top_n: int = DEFAULT_TOP_N,
+        persona_override: ResumePersona | None = None,
         export_preferences: ExportPreferences | None = None,
     ) -> ResumePlan:
         profile_record = await self.profile_repo.get_profile()
@@ -86,6 +87,7 @@ class ResumeService:
             boosted_accomplishment_ids=boosted_accomplishment_ids,
             boost_multiplier=boost_multiplier,
             top_n=top_n,
+            persona_override=persona_override,
             export_preferences=export_preferences,
         )
 
@@ -100,6 +102,7 @@ class ResumeService:
         boosted_accomplishment_ids: list[str] | None = None,
         boost_multiplier: float = DEFAULT_BOOST_MULTIPLIER,
         top_n: int = DEFAULT_TOP_N,
+        persona_override: ResumePersona | None = None,
         export_preferences: ExportPreferences | None = None,
     ) -> ResumePlan:
         """Run the full pipeline (achievement selection through validation)."""
@@ -111,7 +114,12 @@ class ResumeService:
             top_n=top_n,
         )
         strategy = await self.strategy_service.build_strategy(
-            job_posting_id, requirements, profile, selection, boost_multiplier=boost_multiplier
+            job_posting_id,
+            requirements,
+            profile,
+            selection,
+            boost_multiplier=boost_multiplier,
+            persona_override=persona_override,
         )
         coverage = self.coverage_service.compute_coverage(requirements, profile)
         data_model = self.data_model_service.build(

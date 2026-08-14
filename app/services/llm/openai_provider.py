@@ -78,6 +78,16 @@ EXECUTIVE SUMMARY rules:
     strengths (AI/cloud/compliance) that are supported by the candidate profile.
 - If the job is AI-heavy relative to leadership demand, include at least two AI references in
     the summary using candidate-supported terms (AI, Copilot, agents, LLM, automation).
+- Use terminology from the job posting,
+  but do not reference the employer's internal team names,
+  departments, products, or business units (e.g. "FIIG Technology", "Transformers").
+- Avoid presumptive terminology from the job posting,
+  such as "Ready to lead @<company>'s team" or "positioned to lead Manager, Engineering (Transformers) efforts".  
+  The resume should be tailored to the job's requirements, not the employer's internal org.
+- Do not overstate experience or job titles. Allowed: "Software Development Manager", "Engineering Manager", 
+  "Software Engineer", "Engineering Leader", "Senior Engineering Manager", etc. Important!!! - Not allowed: 
+  "Director-level engineering leader", "Head of Engineering", "Chief Engineer", 
+  "Principal Engineer", "Executive leader", "Enterprise AI executive", etc.
 
 EXPERIENCE BULLETS rules:
 - Reorder bullets within each role to lead with the accomplishments most relevant to THIS job.
@@ -86,6 +96,7 @@ EXPERIENCE BULLETS rules:
 - Keep facts, employers, and metrics unchanged — only reframe emphasis and word choice.
 - Omit or shorten bullets for the themes listed in the strategy's "omit" and "deemphasize" lists.
 - Only use numbers that appear in the source key_accomplishments text for that role.
+- Keep present tense for current-role accomplishments when the source text is present tense.
 
 ACCOMPLISHMENT BULLETS rules:
 - Rewrite each accomplishment bullet to call out the specific dimension this job cares about.
@@ -762,10 +773,10 @@ CRITICAL rules (do NOT deviate):
     of AI-related terms grounded in the candidate data.
 - Use terminology from the job posting,
   but do not reference the employer's internal team names,
-  departments, products, or business units (e.g. "FIIG Technology").
-  - Avoid presumptive terminology from the job posting,
-  such as "Ready to lead @<company>'s team".  The resume should be tailored to the job's requirements, 
-  not the employer's internal org.
+  departments, products, or business units (e.g. "FIIG Technology", "Transformers").
+- Avoid presumptive terminology from the job posting,
+  such as "Ready to lead @<company>'s team" or "positioned to lead Manager, Engineering (Transformers) efforts".  
+  The resume should be tailored to the job's requirements, not the employer's internal org.
 - Do not overstate experience or job titles. Allowed: "Software Development Manager", "Engineering Manager", "Software Engineer", "Engineering Leader", "Senior Engineering Manager", etc.
   Important!!! - Not allowed: "Director-level engineering leader", "Head of Engineering", "Chief Engineer", "Principal Engineer", "Executive leader", "Enterprise AI executive", etc.
 - For experience_bullets: each item must have "company" (string) and "bullets" (list of strings).

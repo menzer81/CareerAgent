@@ -85,6 +85,7 @@ class ResumeStrategy(BaseModel):
 
     job_posting_id: int
     persona: ResumePersona
+    recommended_persona: ResumePersona | None = None
     key_themes: list[str] = Field(default_factory=list)
     emphasize: list[str] = Field(default_factory=list)
     deemphasize: list[str] = Field(
@@ -227,6 +228,7 @@ class ResumeBuildRequest(BaseModel):
     boosted_accomplishment_ids: list[str] = Field(default_factory=list)
     boost_multiplier: float = 1.5
     top_n: int = 4
+    persona_override: ResumePersona | None = None
     export_preferences: ExportPreferences = Field(default_factory=ExportPreferences)
 
 

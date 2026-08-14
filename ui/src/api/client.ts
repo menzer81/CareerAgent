@@ -104,6 +104,7 @@ export async function buildResumePlan(
     boosted_accomplishment_ids: options?.boosted_accomplishment_ids ?? [],
     boost_multiplier: options?.boost_multiplier ?? 1.5,
     top_n: options?.top_n ?? 4,
+    persona_override: options?.persona_override,
     export_preferences: options?.export_preferences ?? {
       reactive_resume_template: "onyx",
       reactive_resume_page_format: "letter",

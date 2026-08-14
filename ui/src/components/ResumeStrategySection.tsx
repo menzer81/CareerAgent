@@ -7,14 +7,26 @@ interface Props {
 
 /** Selected persona plus emphasize / deemphasize / omit guidance. */
 export default function ResumeStrategySection({ strategy }: Props) {
+  const recommendedPersona = strategy.recommended_persona ?? strategy.persona;
+  const hasOverride = recommendedPersona !== strategy.persona;
+
   return (
     <Paper elevation={2} sx={{ p: 2 }}>
       <Typography variant="h6" gutterBottom>
         Resume Strategy
       </Typography>
       <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 2 }}>
+        <Typography variant="body1">Recommended Persona:</Typography>
+        <Chip label={recommendedPersona} color="default" />
+      </Stack>
+      <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 2 }}>
         <Typography variant="body1">Selected Persona:</Typography>
         <Chip label={strategy.persona} color="primary" />
+        {hasOverride && (
+          <Typography variant="body2" color="text.secondary">
+            (Override Applied)
+          </Typography>
+        )}
       </Stack>
 
       <Grid container spacing={2}>

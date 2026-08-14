@@ -85,6 +85,23 @@ class TestResumeAPI:
         assert data["export_preferences"]["reactive_resume_page_format"] == "a4"
 
     @pytest.mark.asyncio
+    async def test_persona_override_sets_selected_persona_and_keeps_recommendation(self, client: AsyncClient):
+        job_id = await _setup_profile_and_analyzed_job(client)
+
+        response = await client.post(
+            f"/api/v1/resume/{job_id}",
+            json={
+                "persona_override": "Cloud Transformation Leader",
+            },
+        )
+        assert response.status_code == 201
+        data = response.json()
+        strategy = data["strategy"]
+
+        assert strategy["persona"] == "Cloud Transformation Leader"
+        assert strategy["recommended_persona"] is not None
+
+    @pytest.mark.asyncio
     async def test_download_resume_docx(self, client: AsyncClient):
         job_id = await _setup_profile_and_analyzed_job(client)
         await client.post(f"/api/v1/resume/{job_id}", json={})

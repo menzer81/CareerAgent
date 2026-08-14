@@ -167,8 +167,10 @@ class ResumeStrategyService:
         profile: CandidateProfileData,
         selection: AchievementSelectionResult,
         boost_multiplier: float = DEFAULT_BOOST_MULTIPLIER,
+        persona_override: ResumePersona | None = None,
     ) -> ResumeStrategy:
-        persona = await select_persona_with_llm(requirements, self.llm)
+        recommended_persona = await select_persona_with_llm(requirements, self.llm)
+        persona = persona_override or recommended_persona
         key_themes = list(_PERSONA_THEMES[persona])
 
         # Surface up to two important job keywords not already represented as themes.
@@ -184,6 +186,7 @@ class ResumeStrategyService:
         return ResumeStrategy(
             job_posting_id=job_posting_id,
             persona=persona,
+            recommended_persona=recommended_persona,
             key_themes=key_themes,
             emphasize=emphasize,
             deemphasize=deemphasize,

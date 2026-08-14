@@ -88,7 +88,9 @@ export type ResumePersona =
   | "Engineering Turnaround Specialist"
   | "Compliance & Governance Leader"
   | "Technical Delivery Leader"
-  | "Growth Engineering Leader";
+  | "Growth Engineering Leader"
+  | "Cloud Transformation Leader"
+  | "Director Track Candidate";
 
 export interface AccomplishmentRanking {
   id: string;
@@ -109,6 +111,7 @@ export interface AchievementSelectionResult {
 export interface ResumeStrategy {
   job_posting_id: number;
   persona: ResumePersona;
+  recommended_persona?: ResumePersona | null;
   key_themes: string[];
   emphasize: string[];
   deemphasize: string[];
@@ -159,6 +162,7 @@ export interface ResumeBuildRequest {
   boosted_accomplishment_ids?: string[];
   boost_multiplier?: number;
   top_n?: number;
+  persona_override?: ResumePersona;
   export_preferences?: ExportPreferences;
 }
 

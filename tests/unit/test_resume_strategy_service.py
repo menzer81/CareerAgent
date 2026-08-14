@@ -78,3 +78,20 @@ class TestResumeStrategyOutput:
         )
         assert strategy.boost_multiplier == 2.5
         assert strategy.boosted_accomplishment_ids == ["X"]
+
+    async def test_persona_override_applies_but_recommended_persona_is_retained(
+        self, profile, selection_service
+    ):
+        reqs = JobRequirements(ai_requirements=["LLM", "Copilot"])
+        selection = selection_service.select_achievements(1, reqs)
+
+        strategy = await ResumeStrategyService().build_strategy(
+            1,
+            reqs,
+            profile,
+            selection,
+            persona_override=ResumePersona.CLOUD_TRANSFORMATION_LEADER,
+        )
+
+        assert strategy.recommended_persona == ResumePersona.AI_TRANSFORMATION_LEADER
+        assert strategy.persona == ResumePersona.CLOUD_TRANSFORMATION_LEADER

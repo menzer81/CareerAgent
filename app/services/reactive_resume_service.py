@@ -145,7 +145,7 @@ class ReactiveResumeService:
             "version": "5.0.0",
             "picture": {
                 "hidden": False,
-                "url": "https://rxresu.me/api/uploads/019feca8-98cb-72bc-ae0d-fa5eb9f0d2f4/pictures/1786399572660.jpeg",
+                "url": "https://rxresu.me/api/uploads/019feca8-98cb-72bc-ae0d-fa5eb9f0d2f4/pictures/1786637495721.jpeg",
                 "size": 96,
                 "rotation": 0,
                 "aspectRatio": 1,
